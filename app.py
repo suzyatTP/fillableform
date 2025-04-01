@@ -73,7 +73,7 @@ def submit():
     top_fields = [
         ("Topic", data.get("Topic", "")),
         ("Point Person", data.get("PointPerson", "")),
-        ("Role of Exec Team", data.get("Role", "")),
+        ("Role of Executive Team", data.get("Role", "")),
         ("Executive Sponsor", data.get("Sponsor", "")),
         ("Problem Definition", data.get("Problem", "")),
         ("Outcome Description", data.get("Outcome", "")),

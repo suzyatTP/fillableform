@@ -65,7 +65,7 @@
   <form action="/submit" method="POST">
     <p><label>Topic: <input type="text" name="Topic" /></label></p>
     <p><label>Point Person: <input type="text" name="PointPerson" /></label></p>
-    <p><label>Role of Exec Team: <input type="text" name="Role" /></label></p>
+    <p><label>Role of Executive Team: <input type="text" name="Role" /></label></p>
     <p><label>Executive Sponsor: <input type="text" name="Sponsor" /></label></p>
     <p><label>Problem Definition:<br><textarea name="Problem"></textarea></label></p>
     <p><label>Outcome Description:<br><textarea name="Outcome"></textarea></label></p>
@@ -79,7 +79,7 @@
         <th>Option 2</th>
         <th>Option 3</th>
       </tr>
-      {% for field in ["Desc", "Pros", "Cons", "Benefit", "Obstacles"] %}
+      {% for field in ["Description", "Pros", "Cons", "Benefits/Revenue", "Obstacles"] %}
       <tr>
         <td>{{ field }}</td>
         <td><textarea name="Option1{{ field }}"></textarea></td>
