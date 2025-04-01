@@ -4,6 +4,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 import os
 import io
+import json
 
 app = Flask(__name__)
 
@@ -45,11 +46,22 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
 
 @app.route('/')
 def form():
-    return render_template('form.html')
+    data = {}
+    if os.path.exists("saved_draft.json"):
+        with open("saved_draft.json", "r") as f:
+            data = json.load(f)
+    return render_template('form.html', data=data)
 
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
+    action = data.get("action")
+
+    if action == "save":
+        with open("saved_draft.json", "w") as f:
+            json.dump(data, f)
+        return "Draft saved! You can return later to continue."
+
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
@@ -64,8 +76,7 @@ def submit():
     p.drawString(50, height - 50, "Strategic / Ad hoc Topic Summary")
     logo_path = os.path.join("static", "overlay_icon.png")
     if os.path.exists(logo_path):
-    p.drawImage(logo_path, width - 70, height - 60, width=40, height=40, mask='auto')
-
+        p.drawImage(logo_path, width - 70, height - 60, width=40, height=40, mask='auto')
 
     p.setFillColor(colors.black)
     y = height - 90
@@ -115,7 +126,6 @@ def submit():
         p.showPage()
         y = height - 50
 
-    # Add column headers
     p.setFont("Helvetica-Bold", 10)
     header_y = y
     p.rect(50, header_y - 20, col_width, 20, stroke=1, fill=0)

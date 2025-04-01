@@ -18,11 +18,10 @@
     }
 
     .logo-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-
 
     .header-text {
       font-size: 14px;
@@ -65,19 +64,20 @@
     <div class="header-text">
       <div>Turning Point for God</div>
       <h2>Strategic / Ad Hoc Topic Summary</h2>
-    <div class="logo-container"></div>
-        <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Logo" width="50">
+    </div>
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Logo" width="50">
     </div>
   </div>
 
   <form action="/submit" method="POST">
-    <p><label>Topic: <input type="text" name="Topic" /></label></p>
-    <p><label>Point Person: <input type="text" name="PointPerson" /></label></p>
-    <p><label>Role of Executive Team: <input type="text" name="Role" /></label></p>
-    <p><label>Executive Sponsor: <input type="text" name="Sponsor" /></label></p>
-    <p><label>Problem Definition:<br><textarea name="Problem"></textarea></label></p>
-    <p><label>Outcome Description:<br><textarea name="Outcome"></textarea></label></p>
-    <p><label>Primary Recommendation:<br><textarea name="Recommendation"></textarea></label></p>
+    <p><label>Topic: <input type="text" name="Topic" value="{{ data.get('Topic', '') }}" /></label></p>
+    <p><label>Point Person: <input type="text" name="PointPerson" value="{{ data.get('PointPerson', '') }}" /></label></p>
+    <p><label>Role of Executive Team: <input type="text" name="Role" value="{{ data.get('Role', '') }}" /></label></p>
+    <p><label>Executive Sponsor: <input type="text" name="Sponsor" value="{{ data.get('Sponsor', '') }}" /></label></p>
+    <p><label>Problem Definition:<br><textarea name="Problem">{{ data.get('Problem', '') }}</textarea></label></p>
+    <p><label>Outcome Description:<br><textarea name="Outcome">{{ data.get('Outcome', '') }}</textarea></label></p>
+    <p><label>Primary Recommendation:<br><textarea name="Recommendation">{{ data.get('Recommendation', '') }}</textarea></label></p>
 
     <h3>Options Table</h3>
     <table>
@@ -90,20 +90,22 @@
       {% for field in ["Description", "Pros", "Cons", "Benefits/Revenue", "Obstacles"] %}
       <tr>
         <td>{{ field }}</td>
-        <td><textarea name="Option1{{ field }}"></textarea></td>
-        <td><textarea name="Option2{{ field }}"></textarea></td>
-        <td><textarea name="Option3{{ field }}"></textarea></td>
+        <td><textarea name="Option1{{ field }}">{{ data.get('Option1' + field, '') }}</textarea></td>
+        <td><textarea name="Option2{{ field }}">{{ data.get('Option2' + field, '') }}</textarea></td>
+        <td><textarea name="Option3{{ field }}">{{ data.get('Option3' + field, '') }}</textarea></td>
       </tr>
       {% endfor %}
     </table>
 
-    <p><label>Final Decision:<br><textarea name="Decision" style="width: 400px;"></textarea></label></p>
+    <p><label>Final Decision:<br>
+      <textarea name="Decision" style="width: 400px;">{{ data.get('Decision', '') }}</textarea></label></p>
 
     {% for i in range(1, 6) %}
-    <p><label>Key Action {{ i }}:<br><textarea name="Action{{ i }}"></textarea></label></p>
+    <p><label>Key Action {{ i }}:<br><textarea name="Action{{ i }}">{{ data.get('Action' ~ i, '') }}</textarea></label></p>
     {% endfor %}
 
-    <button type="submit">Generate PDF</button>
+    <button type="submit" name="action" value="save">💾 Save Draft</button>
+    <button type="submit" name="action" value="submit">📝 Generate PDF</button>
   </form>
 </body>
 </html>
