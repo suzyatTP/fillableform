@@ -5,48 +5,30 @@
   <style>
     body {
       font-family: Helvetica, sans-serif;
+      margin: 30px;
     }
 
     .header {
       background-color: #232834;
-      padding: 20px;
       color: white;
+      padding: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .header-text p {
-      margin: 0;
-      font-size: 12px;
-    }
-
-    .header-text h2 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .logo-container {
-      position: relative;
-      width: 40px;
-      height: 40px;
-    }
-
-    .logo-container img {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
+    .header-text {
+      font-size: 14px;
     }
 
     textarea {
-      width: 300px;
+      width: 400px;
       height: 100px;
     }
 
     table {
       border-collapse: collapse;
+      margin-top: 20px;
     }
 
     th, td {
@@ -55,34 +37,34 @@
       vertical-align: top;
     }
 
-    h1 {
-      margin-top: 20px;
+    td textarea {
+      width: 300px;
+      height: 100px;
+    }
+
+    input[type="text"] {
+      width: 300px;
     }
   </style>
 </head>
-
 <body>
-  <!-- Header -->
+
   <div class="header">
     <div class="header-text">
-      <p>Turning Point for God</p>
-      <h2>Strategic / Ad hoc Topic Summary</h2>
+      <div>Turning Point for God</div>
+      <h2>Strategic / Ad Hoc Topic Summary</h2>
     </div>
-    <div class="logo-container">
-      <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Overlay">
-    </div>
+    <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Logo" width="50">
   </div>
 
-  <h1>Strategic / Ad Hoc Topic Summary</h1>
-
   <form action="/submit" method="POST">
-    <label>Topic: <input type="text" name="Topic" /></label><br>
-    <label>Point Person: <input type="text" name="PointPerson" /></label><br>
-    <label>Role of Exec Team: <input type="text" name="Role" /></label><br>
-    <label>Executive Sponsor: <input type="text" name="Sponsor" /></label><br>
-    <label>Problem Definition:<br><textarea name="Problem"></textarea></label><br>
-    <label>Outcome Description:<br><textarea name="Outcome"></textarea></label><br>
-    <label>Primary Recommendation:<br><textarea name="Recommendation"></textarea></label><br><br>
+    <p><label>Topic: <input type="text" name="Topic" /></label></p>
+    <p><label>Point Person: <input type="text" name="PointPerson" /></label></p>
+    <p><label>Role of Exec Team: <input type="text" name="Role" /></label></p>
+    <p><label>Executive Sponsor: <input type="text" name="Sponsor" /></label></p>
+    <p><label>Problem Definition:<br><textarea name="Problem"></textarea></label></p>
+    <p><label>Outcome Description:<br><textarea name="Outcome"></textarea></label></p>
+    <p><label>Primary Recommendation:<br><textarea name="Recommendation"></textarea></label></p>
 
     <h3>Options Table</h3>
     <table>
@@ -92,48 +74,21 @@
         <th>Option 2</th>
         <th>Option 3</th>
       </tr>
+      {% for field in ["Desc", "Pros", "Cons", "Benefit", "Obstacles"] %}
       <tr>
-        <td>Description</td>
-        <td><textarea name="Option1Desc"></textarea></td>
-        <td><textarea name="Option2Desc"></textarea></td>
-        <td><textarea name="Option3Desc"></textarea></td>        
+        <td>{{ field }}</td>
+        <td><textarea name="Option1{{ field }}"></textarea></td>
+        <td><textarea name="Option2{{ field }}"></textarea></td>
+        <td><textarea name="Option3{{ field }}"></textarea></td>
       </tr>
-      <tr>
-        <td>Pros</td>
-        <td><textarea name="Option1Pros"></textarea></td>
-        <td><textarea name="Option2Pros"></textarea></td>
-        <td><textarea name="Option3Pros"></textarea></td>        
-      </tr>
-      <tr>
-        <td>Cons</td>
-        <td><textarea name="Option1Cons"></textarea></td>
-        <td><textarea name="Option2Cons"></textarea></td>
-        <td><textarea name="Option3Cons"></textarea></td>        
-      </tr>
-      <tr>
-        <td>Benefit/Revenue</td>
-        <td><textarea name="Option1Benefit"></textarea></td>
-        <td><textarea name="Option2Benefit"></textarea></td>
-        <td><textarea name="Option3Benefit"></textarea></td>        
-      </tr>
-      <tr>
-        <td>Obstacles</td>
-        <td><textarea name="Option1Obstacles"></textarea></td>
-        <td><textarea name="Option2Obstacles"></textarea></td>
-        <td><textarea name="Option3Obstacles"></textarea></td>        
-      </tr>
+      {% endfor %}
     </table>
 
-    <br>
-    <label>Final Decision:<br>
-        <textarea name="Decision" rows="3" style="width: 300px;"></textarea>
-      </label><br><br>      
+    <p><label>Final Decision:<br><textarea name="Decision" style="width: 400px;"></textarea></label></p>
 
-    <label>Key Action 1: <textarea name="Action1"></textarea></label><br>
-    <label>Key Action 2: <textarea name="Action2"></textarea></label><br>
-    <label>Key Action 3: <textarea name="Action3"></textarea></label><br>
-    <label>Key Action 4: <textarea name="Action4"></textarea></label><br>
-    <label>Key Action 5: <textarea name="Action5"></textarea></label><br><br>
+    {% for i in range(1, 6) %}
+    <p><label>Key Action {{ i }}:<br><textarea name="Action{{ i }}"></textarea></label></p>
+    {% endfor %}
 
     <button type="submit">Generate PDF</button>
   </form>

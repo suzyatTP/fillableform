@@ -1,9 +1,47 @@
 from flask import Flask, render_template, request, send_file
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+import os
 import io
 
 app = Flask(__name__)
+
+def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14):
+    p.setFont(font_name, font_size)
+    words = text.split()
+    lines = []
+    current_line = ""
+    for word in words:
+        test_line = current_line + " " + word if current_line else word
+        if p.stringWidth(test_line, font_name, font_size) <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+    for line in lines:
+        p.drawString(x, y, line)
+        y -= line_height
+    return len(lines) * line_height
+
+def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14):
+    dummy = canvas.Canvas(io.BytesIO())
+    dummy.setFont(font_name, font_size)
+    words = text.split()
+    lines = []
+    current_line = ""
+    for word in words:
+        test_line = current_line + " " + word if current_line else word
+        if dummy.stringWidth(test_line, font_name, font_size) <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+    return line_height * len(lines) + 10
 
 @app.route('/')
 def form():
@@ -12,101 +50,135 @@ def form():
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
-
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
-    y = height - 40
 
+    # Header
+    p.setFillColorRGB(0.15, 0.18, 0.25)
+    p.rect(0, height - 70, width, 70, fill=1, stroke=0)
+    p.setFillColor(colors.white)
     p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, y, "Strategic / Ad Hoc Topic Summary")
-    y -= 30
+    p.drawString(50, height - 30, "Turning Point for God")
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(50, height - 50, "Strategic / Ad hoc Topic Summary")
+    logo_path = os.path.join("static", "header_logo.png")
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, width - 70, height - 60, width=40, height=40, mask='auto')
 
-    # Section 1: Top Fields (before the table)
-    p.setFont("Helvetica", 10)
-    fields = [
-        ("Topic", "Topic"),
-        ("PointPerson", "Point Person"),
-        ("Role", "Role of Exec Team"),
-        ("Sponsor", "Executive Sponsor"),
-        ("Problem", "Problem Definition"),
-        ("Outcome", "Outcome Description"),
-        ("Recommendation", "Primary Recommendation")
+    p.setFillColor(colors.black)
+    y = height - 90
+
+    # Top Fields
+    top_fields = [
+        ("Topic", data.get("Topic", "")),
+        ("Point Person", data.get("PointPerson", "")),
+        ("Role of Exec Team", data.get("Role", "")),
+        ("Executive Sponsor", data.get("Sponsor", "")),
+        ("Problem Definition", data.get("Problem", "")),
+        ("Outcome Description", data.get("Outcome", "")),
+        ("Primary Recommendation", data.get("Recommendation", ""))
     ]
 
-    for key, label in fields:
-        val = data.get(key, "")
-        p.drawString(50, y, f"{label}: {val}")
-        y -= 20
-        if y < 100:
+    for label, val in top_fields:
+        box_height = get_text_height(val, width - 100)
+        if y - box_height < 60:
             p.showPage()
             y = height - 50
-            p.setFont("Helvetica", 10)
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(50, y, label)
+        p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
+        p.setFont("Helvetica", 10)
+        draw_wrapped_text(p, 55, y - 20, val, width - 110)
+        y -= (box_height + 20)
 
-    # Section 2: Alternatives Table
-    y -= 10
+    # Options Table
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
     y -= 20
 
-    p.setFont("Helvetica", 10)
-    table_data = [
-        ["", "Option 1", "Option 2", "Option 3"],
-        ["Description", data.get("Option1Desc", ""), data.get("Option2Desc", ""), data.get("Option3Desc", "")],
-        ["Pros", data.get("Option1Pros", ""), data.get("Option2Pros", ""), data.get("Option3Pros", "")],
-        ["Cons", data.get("Option1Cons", ""), data.get("Option2Cons", ""), data.get("Option3Cons", "")],
-        ["Benefit/Revenue", data.get("Option1Benefit", ""), data.get("Option2Benefit", ""), data.get("Option3Benefit", "")],
-        ["Obstacles", data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")]
+    rows = [
+        ("Description", [data.get("Option1Desc", ""), data.get("Option2Desc", ""), data.get("Option3Desc", "")]),
+        ("Pros", [data.get("Option1Pros", ""), data.get("Option2Pros", ""), data.get("Option3Pros", "")]),
+        ("Cons", [data.get("Option1Cons", ""), data.get("Option2Cons", ""), data.get("Option3Cons", "")]),
+        ("Benefit/Revenue", [data.get("Option1Benefit", ""), data.get("Option2Benefit", ""), data.get("Option3Benefit", "")]),
+        ("Obstacles", [data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")]),
     ]
 
-    row_height = 40
-    col_width = 130
-    x_start = 50
-    table_y = y
+        # Add column headers for Option 1, 2, 3
+    p.setFont("Helvetica-Bold", 10)
+    header_y = y
+    col_width = (width - 100) / 4  # Already calculated earlier
 
-    # Track the actual bottom Y after the table
-    rows_drawn = len(table_data)
-    final_y = table_y - rows_drawn * row_height
+    # Empty top-left label cell
+    p.rect(50, header_y - 20, col_width, 20, stroke=1, fill=0)
 
-    for row_idx, row in enumerate(table_data):
-        for col_idx, cell in enumerate(row):
-            x = x_start + col_idx * col_width
-            y = table_y - row_idx * row_height
-            if y < 100:
-                p.showPage()
-                table_y = height - 50
-                y = table_y - row_idx * row_height
-                final_y = y
-            p.rect(x, y - row_height, col_width, row_height, stroke=1, fill=0)
-            p.drawString(x + 5, y - row_height + 25, str(cell))
+    for i, header in enumerate(["Option 1", "Option 2", "Option 3"]):
+        x = 50 + col_width * (i + 1)
+        p.rect(x, header_y - 20, col_width, 20, stroke=1, fill=0)
+        p.drawCentredString(x + col_width / 2, header_y - 15, header)
 
-    # Set Y right below the table
-    y = final_y - 30
+    y -= 30  # Adjust for header row space
 
-    # Section 3: Final Decision
-    p.setFont("Helvetica", 10)
+    col_w = (width - 100) / 4
+    for label, options in rows:
+        heights = [get_text_height(txt, col_w - 10) for txt in options]
+        row_h = max(heights) + 20
+
+        if y - row_h < 60:
+            p.showPage()
+            y = height - 50
+
+        # Draw label box
+        p.setFont("Helvetica-Bold", 10)
+        p.rect(50, y - row_h, col_w, row_h, stroke=1, fill=0)
+        draw_wrapped_text(p, 55, y - 20, label, col_w - 10)
+
+        # Draw option boxes
+        for i in range(3):
+            x = 50 + (i + 1) * col_w
+            p.setFont("Helvetica", 10)
+            p.rect(x, y - row_h, col_w, row_h, stroke=1, fill=0)
+            draw_wrapped_text(p, x + 5, y - 20, options[i], col_w - 10)
+        y -= (row_h + 10)
+
+    # Final Decision
     decision = data.get("Decision", "")
-    p.drawString(50, y, f"Final Decision: {decision}")
-    y -= 30
+    box_height = get_text_height(decision, width - 100)
+    if y - box_height < 60:
+        p.showPage()
+        y = height - 50
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(50, y, "Final Decision")
+    p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
+    p.setFont("Helvetica", 10)
+    draw_wrapped_text(p, 55, y - 20, decision, width - 110)
+    y -= (box_height + 20)
 
-    # Section 4: Key Actions
+    # Key Actions
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
     y -= 20
-    p.setFont("Helvetica", 10)
+
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
-        p.drawString(70, y, f"{i}. {action}")
-        y -= 15
-        if y < 100:
+        box_height = get_text_height(action, width - 130)
+        if y - box_height < 60:
             p.showPage()
             y = height - 50
-            p.setFont("Helvetica", 10)
 
-    p.showPage()
+        # Draw number to the left
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(55, y - 15, f"{i}.")
+
+        # Draw box next to number
+        p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
+        p.setFont("Helvetica", 10)
+        draw_wrapped_text(p, 80, y - 20, action, width - 130)
+        y -= (box_height + 15)
+
     p.save()
     buffer.seek(0)
-
     return send_file(buffer, as_attachment=True, download_name="Strategic_Topic_Summary.pdf", mimetype='application/pdf')
 
 if __name__ == '__main__':
