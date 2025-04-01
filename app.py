@@ -62,9 +62,10 @@ def submit():
     p.drawString(50, height - 30, "Turning Point for God")
     p.setFont("Helvetica-Bold", 16)
     p.drawString(50, height - 50, "Strategic / Ad hoc Topic Summary")
-    logo_path = os.path.join("static", "header_logo.png")
+    logo_path = os.path.join("static", "overlay_icon.png")
     if os.path.exists(logo_path):
-        p.drawImage(logo_path, width - 70, height - 60, width=40, height=40, mask='auto')
+    p.drawImage(logo_path, width - 70, height - 60, width=40, height=40, mask='auto')
+
 
     p.setFillColor(colors.black)
     y = height - 90

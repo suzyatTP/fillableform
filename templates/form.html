@@ -17,11 +17,18 @@
       align-items: center;
     }
 
+    .logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+    }
+
+
     .header-text {
       font-size: 14px;
     }
 
-    textarea, input [type="text"] {
+    textarea, input[type="text"] {
       font-size: 16px;
       font-family: Helvetica, sans-serif;
     }
@@ -58,8 +65,9 @@
     <div class="header-text">
       <div>Turning Point for God</div>
       <h2>Strategic / Ad Hoc Topic Summary</h2>
+    <div class="logo-container"></div>
+        <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Logo" width="50">
     </div>
-    <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Logo" width="50">
   </div>
 
   <form action="/submit" method="POST">
