@@ -9,7 +9,7 @@
 
     .header {
       background-color: #232834;
-      padding: px 20px;
+      padding: 20px;
       color: white;
       display: flex;
       justify-content: space-between;
@@ -65,10 +65,10 @@
   <!-- Header -->
   <div class="header">
     <div class="header-text">
-      <h>Turning Point for God</p>
+      <p>Turning Point for God</p>
+      <h2>Strategic / Ad hoc Topic Summary</h2>
     </div>
     <div class="logo-container">
-      <img src="{{ url_for('static', filename='header_logo.png') }}" alt="Base Logo">
       <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Overlay">
     </div>
   </div>
@@ -85,7 +85,7 @@
     <label>Primary Recommendation:<br><textarea name="Recommendation"></textarea></label><br><br>
 
     <h3>Options Table</h3>
-    <table border="1" cellpadding="5">
+    <table>
       <tr>
         <th></th>
         <th>Option 1</th>
@@ -94,33 +94,33 @@
       </tr>
       <tr>
         <td>Description</td>
-        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+        <td><textarea name="Option1Desc"></textarea></td>
+        <td><textarea name="Option2Desc"></textarea></td>
+        <td><textarea name="Option3Desc"></textarea></td>        
       </tr>
       <tr>
         <td>Pros</td>
-        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+        <td><textarea name="Option1Pros"></textarea></td>
+        <td><textarea name="Option2Pros"></textarea></td>
+        <td><textarea name="Option3Pros"></textarea></td>        
       </tr>
       <tr>
         <td>Cons</td>
-        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+        <td><textarea name="Option1Cons"></textarea></td>
+        <td><textarea name="Option2Cons"></textarea></td>
+        <td><textarea name="Option3Cons"></textarea></td>        
       </tr>
       <tr>
         <td>Benefit/Revenue</td>
-        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+        <td><textarea name="Option1Benefit"></textarea></td>
+        <td><textarea name="Option2Benefit"></textarea></td>
+        <td><textarea name="Option3Benefit"></textarea></td>        
       </tr>
       <tr>
         <td>Obstacles</td>
-        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
-        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+        <td><textarea name="Option1Obstacles"></textarea></td>
+        <td><textarea name="Option2Obstacles"></textarea></td>
+        <td><textarea name="Option3Obstacles"></textarea></td>        
       </tr>
     </table>
 

@@ -49,35 +49,30 @@ def get_wrapped_text_height(text, max_width, font_name="Helvetica", font_size=10
 
     return line_height * len(lines)
 
-def draw_wrapped_table(p, table_data, x_start, y, col_width, page_height, line_height=14):
+def draw_wrapped_table(p, table_data, x_start, y, col_widths, page_height, line_height=14):
     font_name = "Helvetica"
     font_size = 10
-    num_cols = len(table_data[0])
-
     p.setFont(font_name, font_size)
-    for row in table_data:
-        # Calculate row height
-        cell_heights = []
-        for cell in row:
-            if cell:
-                h = get_wrapped_text_height(cell, col_width - 150, font_name, font_size, line_height)
-            else:
-                h = line_height
-            cell_heights.append(h)
-        row_height = max(cell_heights) + 50
 
-        # Page break if needed
+    for row in table_data:
+        cell_heights = []
+        for col_idx, cell in enumerate(row):
+            width = col_widths[col_idx]
+            h = get_wrapped_text_height(cell, width - 6, font_name, font_size, line_height)
+            cell_heights.append(h)
+
+        row_height = max(cell_heights) + 10
+
         if y - row_height < 50:
             p.showPage()
             y = page_height - 50
             p.setFont(font_name, font_size)
 
-        # Draw row boxes
         for col_idx, cell in enumerate(row):
-            x = x_start + col_idx * col_width
-            p.rect(x, y - row_height, col_width, row_height)
-            text_y = y - 5
-            draw_wrapped_text(p, x + 3, text_y, cell, col_width - 6, line_height, font_name, font_size)
+            x = x_start + sum(col_widths[:col_idx])
+            width = col_widths[col_idx]
+            p.rect(x, y - row_height, width, row_height)
+            draw_wrapped_text(p, x + 3, y - 5, cell, max_width=width - 6, line_height=line_height, font_name=font_name, font_size=font_size)
 
         y -= row_height
     return y
@@ -86,11 +81,6 @@ def draw_wrapped_table(p, table_data, x_start, y, col_width, page_height, line_h
 def form():
     return render_template('form.html')
 
-@app.route('/test')
-def test_page():
-    return render_template('test.html')
-
-
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
@@ -98,23 +88,21 @@ def submit():
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Header
     p.setFillColorRGB(0.15, 0.18, 0.25)
-    p.rect(0, height - 60, width, 60, fill=1, stroke=0)
+    p.rect(0, height - 70, width, 70, fill=1, stroke=0)
     p.setFillColor(colors.white)
     p.setFont("Helvetica-Bold", 14)
     p.drawString(50, height - 30, "Turning Point for God")
     p.setFont("Helvetica-Bold", 16)
-    p.drawString(50, height - 45, "Strategic / Ad hoc Topic Summary")
+    p.drawString(50, height - 50, "Strategic / Ad hoc Topic Summary")
 
     logo_path = os.path.join("static", "header_logo.png")
     if os.path.exists(logo_path):
-        p.drawImage(logo_path, width - 70, height - 55, width=40, height=40, mask='auto')
+        p.drawImage(logo_path, width - 70, height - 60, width=40, height=40, mask='auto')
 
     p.setFillColor(colors.black)
-    y = height - 80
+    y = height - 90
 
-    # Top Fields
     fields = [
         ("Topic", "Topic"),
         ("PointPerson", "Point Person"),
@@ -127,16 +115,13 @@ def submit():
 
     for key, label in fields:
         val = data.get(key, "")
-        p.setFont("Helvetica-Bold", 10)
-        p.drawString(50, y, f"{label}:")
-        y -= 15
-        y, _ = draw_wrapped_text(p, 70, y, val, max_width=450)
+        label_text = f"{label}: {val}"
+        y, _ = draw_wrapped_text(p, 50, y, label_text, max_width=500)
         y -= 10
         if y < 100:
             p.showPage()
             y = height - 50
 
-    # Table
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
     y -= 20
@@ -150,27 +135,28 @@ def submit():
         ["Obstacles", data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")]
     ]
 
-    y = draw_wrapped_table(p, table_data, 50, y, col_width=130, page_height=height)
+    col_widths = [120, 130, 130, 130]
+    y = draw_wrapped_table(p, table_data, 50, y, col_widths=col_widths, page_height=height)
 
-    # Final Decision
     p.setFont("Helvetica-Bold", 10)
+    y -= 10
     p.drawString(50, y, "Final Decision:")
     y -= 15
     y, _ = draw_wrapped_text(p, 70, y, data.get("Decision", ""), max_width=450)
-    y -= 20
+    y -= 10
 
-    # Key Actions
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
     y -= 20
     p.setFont("Helvetica", 10)
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
-        p.drawString(70, y, f"{i}. {action}")
-        y -= 15
+        y, _ = draw_wrapped_text(p, 70, y, f"{i}. {action}", max_width=450)
+        y -= 5
         if y < 100:
             p.showPage()
             y = height - 50
+            p.setFont("Helvetica", 10)
 
     p.save()
     buffer.seek(0)
