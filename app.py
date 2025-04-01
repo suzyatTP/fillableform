@@ -105,12 +105,18 @@ def submit():
         ("Obstacles", [data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")]),
     ]
 
-        # Add column headers for Option 1, 2, 3
+    col_width = (width - 100) / 4
+    first_row_heights = [get_text_height(txt, col_width - 10) for txt in rows[0][1]]
+    first_row_height = max(first_row_heights) + 20
+    header_row_height = 30
+
+    if y - (first_row_height + header_row_height) < 60:
+        p.showPage()
+        y = height - 50
+
+    # Add column headers
     p.setFont("Helvetica-Bold", 10)
     header_y = y
-    col_width = (width - 100) / 4  # Already calculated earlier
-
-    # Empty top-left label cell
     p.rect(50, header_y - 20, col_width, 20, stroke=1, fill=0)
 
     for i, header in enumerate(["Option 1", "Option 2", "Option 3"]):
@@ -118,8 +124,7 @@ def submit():
         p.rect(x, header_y - 20, col_width, 20, stroke=1, fill=0)
         p.drawCentredString(x + col_width / 2, header_y - 15, header)
 
-    y -= 30  # Adjust for header row space
-
+    y -= 30
     col_w = (width - 100) / 4
     for label, options in rows:
         heights = [get_text_height(txt, col_w - 10) for txt in options]
@@ -129,12 +134,10 @@ def submit():
             p.showPage()
             y = height - 50
 
-        # Draw label box
         p.setFont("Helvetica-Bold", 10)
         p.rect(50, y - row_h, col_w, row_h, stroke=1, fill=0)
         draw_wrapped_text(p, 55, y - 20, label, col_w - 10)
 
-        # Draw option boxes
         for i in range(3):
             x = 50 + (i + 1) * col_w
             p.setFont("Helvetica", 10)
@@ -167,11 +170,9 @@ def submit():
             p.showPage()
             y = height - 50
 
-        # Draw number to the left
         p.setFont("Helvetica-Bold", 10)
         p.drawString(55, y - 15, f"{i}.")
 
-        # Draw box next to number
         p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 10)
         draw_wrapped_text(p, 80, y - 20, action, width - 130)
