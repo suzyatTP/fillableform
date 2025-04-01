@@ -7,6 +7,7 @@ import io
 
 app = Flask(__name__)
 
+# Draw wrapped text within a box
 def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14):
     p.setFont(font_name, font_size)
     words = text.split()
@@ -29,6 +30,7 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size
 
     return y, len(lines) * line_height
 
+# Estimate text box height
 def get_text_box_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14):
     dummy = canvas.Canvas(io.BytesIO())
     dummy.setFont(font_name, font_size)
@@ -44,17 +46,18 @@ def get_text_box_height(text, max_width, font_name="Helvetica", font_size=10, li
             current_line = word
     if current_line:
         lines.append(current_line)
-    return line_height * len(lines) + 10
+    return line_height * len(lines) + 25  # extra space for padding/label
 
+# Draw a labeled box with content
 def draw_labeled_box(p, x, y, width, label, text, page_height):
     height = get_text_box_height(text, width - 10)
     if y - height < 50:
         p.showPage()
         y = page_height - 50
 
+    p.rect(x, y - height, width, height, stroke=1, fill=0)
     p.setFont("Helvetica-Bold", 10)
     p.drawString(x + 5, y - 15, label)
-    p.rect(x, y - height, width, height, stroke=1, fill=0)
     p.setFont("Helvetica", 10)
     draw_wrapped_text(p, x + 5, y - 30, text, width - 10)
     return y - height - 10
@@ -114,8 +117,18 @@ def submit():
 
     col_width = (width - 100) / 3
     for label, values in option_rows:
+        max_height = max([get_text_box_height(v, col_width - 10) for v in values])
+        if y - max_height < 50:
+            p.showPage()
+            y = height - 50
         for i in range(3):
-            y = draw_labeled_box(p, 50 + i * col_width, y, col_width - 5, label if i == 0 else "", values[i], height)
+            p.rect(50 + i * col_width, y - max_height, col_width, max_height, stroke=1, fill=0)
+            if i == 0:
+                p.setFont("Helvetica-Bold", 10)
+                p.drawString(50 + i * col_width + 5, y - 15, label)
+            p.setFont("Helvetica", 10)
+            draw_wrapped_text(p, 50 + i * col_width + 5, y - 30, values[i], col_width - 10)
+        y -= max_height + 10
 
     # --- FINAL DECISION ---
     y = draw_labeled_box(p, 50, y, width - 100, "Final Decision", data.get("Decision", ""), height)
@@ -126,7 +139,7 @@ def submit():
     y -= 20
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
-        y = draw_labeled_box(p, 70, y, width - 120, f"{i}.", action, height)
+        y = draw_labeled_box(p, 70, y, width - 120, f"Action {i}", action, height)
 
     p.save()
     buffer.seek(0)
