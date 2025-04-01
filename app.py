@@ -49,6 +49,21 @@ def get_wrapped_text_height(text, max_width, font_name="Helvetica", font_size=10
 
     return line_height * len(lines)
 
+def draw_labeled_box(p, x, y, label, value, width, page_height, font_size=10):
+    p.setFont("Helvetica-Bold", font_size)
+    label_height = get_wrapped_text_height(label, width - 10)
+    value_height = get_wrapped_text_height(value, width - 10)
+    total_height = label_height + value_height + 10
+
+    if y - total_height < 50:
+        p.showPage()
+        y = page_height - 50
+
+    p.rect(x, y - total_height, width, total_height)
+    y1, _ = draw_wrapped_text(p, x + 5, y - 5, label, max_width=width - 10)
+    draw_wrapped_text(p, x + 5, y1 - 5, value, max_width=width - 10)
+    return y - total_height - 10
+
 def draw_wrapped_table(p, table_data, x_start, y, col_widths, page_height, line_height=14):
     font_name = "Helvetica"
     font_size = 10
@@ -88,6 +103,7 @@ def submit():
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
+    # Header
     p.setFillColorRGB(0.15, 0.18, 0.25)
     p.rect(0, height - 70, width, 70, fill=1, stroke=0)
     p.setFillColor(colors.white)
@@ -103,25 +119,21 @@ def submit():
     p.setFillColor(colors.black)
     y = height - 90
 
-    fields = [
-        ("Topic", "Topic"),
-        ("PointPerson", "Point Person"),
-        ("Role", "Role of Exec Team"),
-        ("Sponsor", "Executive Sponsor"),
-        ("Problem", "Problem Definition"),
-        ("Outcome", "Outcome Description"),
-        ("Recommendation", "Primary Recommendation")
+    # Labeled Top Boxes
+    top_fields = [
+        ("Topic", data.get("Topic", "")),
+        ("Point Person", data.get("PointPerson", "")),
+        ("Role of Exec Team", data.get("Role", "")),
+        ("Executive Sponsor", data.get("Sponsor", "")),
+        ("Problem Definition", data.get("Problem", "")),
+        ("Outcome Description", data.get("Outcome", "")),
+        ("Primary Recommendation", data.get("Recommendation", ""))
     ]
 
-    for key, label in fields:
-        val = data.get(key, "")
-        label_text = f"{label}: {val}"
-        y, _ = draw_wrapped_text(p, 50, y, label_text, max_width=500)
-        y -= 10
-        if y < 100:
-            p.showPage()
-            y = height - 50
+    for label, value in top_fields:
+        y = draw_labeled_box(p, 50, y, label, value, width=500, page_height=height)
 
+    # Options Table
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
     y -= 20
@@ -138,13 +150,12 @@ def submit():
     col_widths = [120, 130, 130, 130]
     y = draw_wrapped_table(p, table_data, 50, y, col_widths=col_widths, page_height=height)
 
+    # Final Decision Box
     p.setFont("Helvetica-Bold", 10)
     y -= 10
-    p.drawString(50, y, "Final Decision:")
-    y -= 15
-    y, _ = draw_wrapped_text(p, 70, y, data.get("Decision", ""), max_width=450)
-    y -= 10
+    y = draw_labeled_box(p, 50, y, "Final Decision", data.get("Decision", ""), width=500, page_height=height)
 
+    # Key Actions
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
     y -= 20
