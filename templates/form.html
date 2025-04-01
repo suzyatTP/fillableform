@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Strategic / Ad Hoc Topic Summary</title>
+  <style>
+    body {
+      font-family: Helvetica, sans-serif;
+    }
+
+    .header {
+      background-color: #232834;
+      padding: px 20px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-text p {
+      margin: 0;
+      font-size: 12px;
+    }
+
+    .header-text h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .logo-container {
+      position: relative;
+      width: 40px;
+      height: 40px;
+    }
+
+    .logo-container img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
+
+    textarea {
+      width: 300px;
+      height: 100px;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid black;
+      padding: 5px;
+      vertical-align: top;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-text">
+      <h>Turning Point for God</p>
+    </div>
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='header_logo.png') }}" alt="Base Logo">
+      <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Overlay">
+    </div>
+  </div>
+
+  <h1>Strategic / Ad Hoc Topic Summary</h1>
+
+  <form action="/submit" method="POST">
+    <label>Topic: <input type="text" name="Topic" /></label><br>
+    <label>Point Person: <input type="text" name="PointPerson" /></label><br>
+    <label>Role of Exec Team: <input type="text" name="Role" /></label><br>
+    <label>Executive Sponsor: <input type="text" name="Sponsor" /></label><br>
+    <label>Problem Definition:<br><textarea name="Problem"></textarea></label><br>
+    <label>Outcome Description:<br><textarea name="Outcome"></textarea></label><br>
+    <label>Primary Recommendation:<br><textarea name="Recommendation"></textarea></label><br><br>
+
+    <h3>Options Table</h3>
+    <table border="1" cellpadding="5">
+      <tr>
+        <th></th>
+        <th>Option 1</th>
+        <th>Option 2</th>
+        <th>Option 3</th>
+      </tr>
+      <tr>
+        <td>Description</td>
+        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+      </tr>
+      <tr>
+        <td>Pros</td>
+        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+      </tr>
+      <tr>
+        <td>Cons</td>
+        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+      </tr>
+      <tr>
+        <td>Benefit/Revenue</td>
+        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+      </tr>
+      <tr>
+        <td>Obstacles</td>
+        <td><textarea name="Option1Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option2Desc" style="width: 300px; height: 100px;"></textarea></td>
+        <td><textarea name="Option3Desc" style="width: 300px; height: 100px;"></textarea></td>        
+      </tr>
+    </table>
+
+    <br>
+    <label>Final Decision:<br>
+      <textarea name="Decision" rows="3" style="width: 300px;"></textarea>
+    </label><br><br>
+
+    <label>Key Action 1: <textarea name="Action1"></textarea></label><br>
+    <label>Key Action 2: <textarea name="Action2"></textarea></label><br>
+    <label>Key Action 3: <textarea name="Action3"></textarea></label><br>
+    <label>Key Action 4: <textarea name="Action4"></textarea></label><br>
+    <label>Key Action 5: <textarea name="Action5"></textarea></label><br><br>
+
+    <button type="submit">Generate PDF</button>
+  </form>
+</body>
+</html>
