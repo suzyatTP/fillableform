@@ -211,7 +211,7 @@ def submit():
         y -= 10 
 
     decision = data.get("Decision", "")
-    box_height = get_text_height(decision, width - 100)
+    box_height = get_text_height(decision, width - 100) + 50
     if y - box_height < 60:
         p.showPage()
         y = height - 50
@@ -240,8 +240,15 @@ def submit():
 
     p.save()
     buffer.seek(0)
+
     pdf_filename = f"{draft_name or 'Strategic_Topic_Summary'}.pdf"
-return send_file(buffer, as_attachment=True, download_name=pdf_filename, mimetype='application/pdf')
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=pdf_filename,
+        mimetype='application/pdf'
+    )
+
 
 if __name__ == '__main__':
     app.run(debug=True)
