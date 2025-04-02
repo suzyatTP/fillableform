@@ -118,13 +118,14 @@
         <textarea name="Action{{ i }}">{{ data.get('Action' ~ i, '') }}</textarea></label></p>
       {% endfor %}
 
-      <a href="/" style="text-decoration: none;">
-        <button type="button">New Draft</button>
-      </a>      
       
     <button type="submit" name="action" value="save">Save Draft</button>
     <button type="submit" name="action" value="submit">Generate PDF</button>
     <button type="submit" name="action" value="delete">Delete Draft</button>
+
+    <a href="/" style="text-decoration: none;">
+      <button type="button">New Draft</button>
+    </a>
 
   </form>
 </body>
