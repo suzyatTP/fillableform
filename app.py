@@ -173,7 +173,7 @@ def submit():
     y = height - 90
 
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y)
+    p.drawString(50, y, "Options Table")
     y -= 20
 
     rows = [
