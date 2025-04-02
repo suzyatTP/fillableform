@@ -170,6 +170,9 @@ def submit():
         text_height = get_text_height(val, width - 110)
         text_y = y - 5 - (text_height / 2) + (box_height / 2)
         draw_wrapped_text(p, 55, text_y, val, width - 110)
+        
+        y -= (box_height + 20)  # move down for next section
+
 
 
     p.showPage()              
