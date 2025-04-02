@@ -8,6 +8,18 @@
       margin: 30px;
     }
 
+    .form-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
     .header {
       background-color: #272e3d;
       color: white;
@@ -93,41 +105,48 @@
     </div>
   </div>
 
-<form method="GET" action="/">
-  <label for="draft">Load Draft:</label>
-  <select name="draft" onchange="this.form.submit()">
-    <option value="">-- New Draft --</option>
-    {% for draft in drafts %}
-      <option value="{{ draft }}" {% if selected_draft == draft %}selected{% endif %}>{{ draft }}</option>
-    {% endfor %}
-  </select>
-</form>
+  <!-- Load Draft (standalone form) -->
+  <form method="GET" action="/">
+    <label for="draft">Load Draft:</label>
+    <select name="draft" onchange="this.form.submit()">
+      <option value="">-- New Draft --</option>
+      {% for draft in drafts %}
+        <option value="{{ draft }}" {% if selected_draft == draft %}selected{% endif %}>{{ draft }}</option>
+      {% endfor %}
+    </select>
+  </form>
 
+  <!--  Main POST Form -->
   <form action="/submit" method="POST">
-    <p>
-      <label for="draft_name">Draft Name:</label><br>
-      <input type="text" id="draft_name" name="draft_name" value="{{ selected_draft or '' }}" />
-    </p>
-  
-    <p>
-      <label for="Topic">Topic:</label><br>
-      <input type="text" id="Topic" name="Topic" value="{{ data.get('Topic', '') }}" />
-    </p>
-  
-    <p>
-      <label for="PointPerson">Point Person:</label><br>
-      <input type="text" id="PointPerson" name="PointPerson" value="{{ data.get('PointPerson', '') }}" />
-    </p>
-  
-    <p>
-      <label for="Role">Role of Executive Team (consult, inform, decide):</label><br>
-      <input type="text" id="Role" name="Role" value="{{ data.get('Role', '') }}" />
-    </p>
-  
-    <p>
-      <label for="Sponsor">Executive Sponsor:</label><br>
-      <input type="text" id="Sponsor" name="Sponsor" value="{{ data.get('Sponsor', '') }}" />
-    </p>
+
+    <!-- Draft Name + Topic -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="draft_name">Draft Name:</label>
+        <input type="text" id="draft_name" name="draft_name" value="{{ selected_draft or '' }}" />
+      </div>
+      <div class="form-group">
+        <label for="Topic">Topic:</label>
+        <input type="text" id="Topic" name="Topic" value="{{ data.get('Topic', '') }}" />
+      </div>
+    </div>
+
+    <!-- Point Person + Role + Sponsor -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="PointPerson">Point Person:</label>
+        <input type="text" id="PointPerson" name="PointPerson" value="{{ data.get('PointPerson', '') }}" />
+      </div>
+      <div class="form-group">
+        <label for="Role">Role of Executive Team (consult, inform, decide):</label>
+        <input type="text" id="Role" name="Role" value="{{ data.get('Role', '') }}" />
+      </div>
+      <div class="form-group">
+        <label for="Sponsor">Executive Sponsor:</label>
+        <input type="text" id="Sponsor" name="Sponsor" value="{{ data.get('Sponsor', '') }}" />
+      </div>
+    </div>
+
   
     <p>
       <label for="Problem">Problem Definition:</label><br>
