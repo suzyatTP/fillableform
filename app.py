@@ -159,7 +159,7 @@ def submit():
         ("Primary Recommendation", data.get("Recommendation", ""))
     ]
     for label, val in top_fields:
-    box_height = get_text_height(val, width - 100)
+        box_height = get_text_height(val, width - 100)
 
     # If not enough room, start new page
     if y - box_height - 30 < 60:
