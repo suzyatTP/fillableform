@@ -74,7 +74,7 @@
 <form method="GET" action="/">
   <label for="draft">Load Draft:</label>
   <select name="draft" onchange="this.form.submit()">
-    <option value="">-- Select Draft --</option>
+    <option value="">-- New Draft --</option>
     {% for draft in drafts %}
       <option value="{{ draft }}" {% if selected_draft == draft %}selected{% endif %}>{{ draft }}</option>
     {% endfor %}
@@ -120,8 +120,8 @@
       
     <button type="submit" name="action" value="save">💾 Save Draft</button>
     <button type="submit" name="action" value="submit">📝 Generate PDF</button>
-    <button type="reset">🧹 Clear Saved Draft</button>
     <button type="submit" name="action" value="delete">🗑️ Delete Draft</button>
+    <button type="reset">🧹 Clear All Text Boxes</button>
 
   </form>
 </body>
