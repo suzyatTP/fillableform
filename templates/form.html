@@ -59,7 +59,7 @@
     }
 
     textarea {
-      width: 400px;
+      width: 800px;
       height: 100px;
     }
 
@@ -114,7 +114,7 @@
     <select name="draft" onchange="this.form.submit()">
       <option value="">-- New Draft --</option>
       {% for draft in drafts %}
-        <option value="{{ draft }}" {% if selected_draft = draft %}selected{% endif %}>{{ draft }}</option>
+        <option value="{{ draft }}" {% if selected_draft == draft %}selected{% endif %}>{{ draft }}</option>
       {% endfor %}
     </select>
   </form>
