@@ -41,7 +41,7 @@ def save_draft_to_db(draft_name, content_dict):
     conn.commit()
     conn.close()
 
-    def load_draft_from_db(draft_name):
+def load_draft_from_db(draft_name):
     conn = sqlite3.connect('drafts.db')
     c = conn.cursor()
     c.execute("SELECT data FROM drafts WHERE draft_name = ?", (draft_name,))
