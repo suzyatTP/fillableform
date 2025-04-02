@@ -5,8 +5,51 @@ from reportlab.lib import colors
 import os
 import io
 import json
+import sqlite
 
 app = Flask(__name__)
+
+def init_db():
+    conn = sqlite3.connect('drafts.db')
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS drafts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            draft_name TEXT UNIQUE NOT NULL,
+            data TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+import json
+
+def save_draft_to_db(draft_name, content_dict):
+    conn = sqlite3.connect('drafts.db')
+    c = conn.cursor()
+
+    # Convert the content dictionary to a JSON string
+    json_data = json.dumps(content_dict)
+
+    # Insert the draft data into the database
+    c.execute("""
+        INSERT INTO drafts (draft_name, data)
+        VALUES (?, ?)
+        ON CONFLICT(draft_name) DO UPDATE SET data = excluded.data
+    """, (draft_name, json_data))
+
+    conn.commit()
+    conn.close()
+
+    def load_draft_from_db(draft_name):
+    conn = sqlite3.connect('drafts.db')
+    c = conn.cursor()
+    c.execute("SELECT data FROM drafts WHERE draft_name = ?", (draft_name,))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return json.loads(row[0])  # Deserialize the data
+    return {}
 
 def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14):
     p.setFont(font_name, font_size)
@@ -56,15 +99,15 @@ def form():
 def submit():
     data = request.form.to_dict()
     action = data.get("action")
+    draft_name = data.get("draft_name")  # Get the draft name from the form
 
     if action == "save":
-        with open("saved_draft.json", "w") as f:
-            json.dump(data, f)
-        return "Draft saved! You can return later to continue."
+        if not draft_name:
+            return "Please enter a draft name."
 
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
+        # Save the draft data to the database
+        save_draft_to_db(draft_name, data)
+        return f"Draft '{draft_name}' saved! You can return later to continue."
 
     # Header
     p.setFillColorRGB(0.15, 0.18, 0.25)
@@ -101,7 +144,7 @@ def submit():
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 10)
-        draw_wrapped_text(p, 55, y - 5, val, width - 110)
+        draw_wrapped_text(p, 55, y - 10, val, width - 110)
         y -= (box_height + 20)
 
     # Options Table
