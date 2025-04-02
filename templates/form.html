@@ -109,21 +109,19 @@
     </div>
   </div>
 
-  <!-- Load Draft (standalone form) -->
   <form method="GET" action="/">
     <label for="draft">Load Draft:</label>
     <select name="draft" onchange="this.form.submit()">
       <option value="">-- New Draft --</option>
       {% for draft in drafts %}
-        <option value="{{ draft }}" {% if selected_draft == draft %}selected{% endif %}>{{ draft }}</option>
+        <option value="{{ draft }}" {% if selected_draft = draft %}selected{% endif %}>{{ draft }}</option>
       {% endfor %}
     </select>
   </form>
 
-  <!--  Main POST Form -->
   <form action="/submit" method="POST">
 
-    <!-- Draft Name + Topic -->
+    
     <div class="form-row first-form-row">
       <div class="form-group">
         <label for="draft_name">Draft Name:</label>
@@ -135,7 +133,7 @@
       </div>
     </div>
 
-    <!-- Point Person + Role + Sponsor -->
+    
     <div class="form-row">
       <div class="form-group">
         <label for="PointPerson">Point Person:</label>
@@ -197,7 +195,7 @@
       
     <button type="submit" name="action" value="save">Save Draft</button>
     <button type="submit" name="action" value="submit">Generate PDF</button>
-    <button type="submit" name="action" value="delete">Delete Draft</button>
+    <button type="submit" name="action" value="delete">Delete Saved Draft</button>
 
     <a href="/" style="text-decoration: none;">
       <button type="button">New Draft</button>
