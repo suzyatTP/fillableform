@@ -170,6 +170,9 @@ def submit():
         draw_wrapped_text(p, 55, y - 15, val, width - 110)
         y -= (box_height + 20)
 
+    p.showPage()
+    y = height - 90
+
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
     y -= 20
@@ -196,7 +199,7 @@ def submit():
         if y - row_h < 60:
             p.showPage()
             y = height - 50
-        p.setFont("Helvetica-Bold", 10)
+        p.setFont("Helvetica-Bold", 12)
         p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
         draw_wrapped_text(p, 55, y - 20, label, col_width - 10)
         for i in range(3):
@@ -236,7 +239,8 @@ def submit():
 
     p.save()
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name="Strategic_Topic_Summary.pdf", mimetype='application/pdf')
+    pdf_filename = f"{draft_name or 'Strategic_Topic_Summary'}.pdf"
+return send_file(buffer, as_attachment=True, download_name=pdf_filename, mimetype='application/pdf')
 
 if __name__ == '__main__':
     app.run(debug=True)
