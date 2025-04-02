@@ -87,7 +87,6 @@
     </div>
   </div>
 
-  <!-- Dropdown to load existing drafts -->
 <form method="GET" action="/">
   <label for="draft">Load Draft:</label>
   <select name="draft" onchange="this.form.submit()">
@@ -99,14 +98,46 @@
 </form>
 
   <form action="/submit" method="POST">
-    <p><label>Draft Name: <input type="text" name="draft_name" value="{{ selected_draft or '' }}" /></label></p>
-    <p><label>Topic: <input type="text" name="Topic" value="{{ data.get('Topic', '') }}" /></label></p>
-    <p><label>Point Person: <input type="text" name="PointPerson" value="{{ data.get('PointPerson', '') }}" /></label></p>
-    <p><label>Role of Executive Team (consult, inform, decide): <input type="text" name="Role" value="{{ data.get('Role', '') }}" /></label></p>
-    <p><label>Executive Sponsor: <input type="text" name="Sponsor" value="{{ data.get('Sponsor', '') }}" /></label></p>
-    <p><label>Problem Definition:<br><textarea name="Problem">{{ data.get('Problem', '') }}</textarea></label></p>
-    <p><label>Outcome Description:<br><textarea name="Outcome">{{ data.get('Outcome', '') }}</textarea></label></p>
-    <p><label>Primary Recommendation:<br><textarea name="Recommendation">{{ data.get('Recommendation', '') }}</textarea></label></p>
+    <p>
+      <label for="draft_name">Draft Name:</label><br>
+      <input type="text" id="draft_name" name="draft_name" value="{{ selected_draft or '' }}" />
+    </p>
+  
+    <p>
+      <label for="Topic">Topic:</label><br>
+      <input type="text" id="Topic" name="Topic" value="{{ data.get('Topic', '') }}" />
+    </p>
+  
+    <p>
+      <label for="PointPerson">Point Person:</label><br>
+      <input type="text" id="PointPerson" name="PointPerson" value="{{ data.get('PointPerson', '') }}" />
+    </p>
+  
+    <p>
+      <label for="Role">Role of Executive Team (consult, inform, decide):</label><br>
+      <input type="text" id="Role" name="Role" value="{{ data.get('Role', '') }}" />
+    </p>
+  
+    <p>
+      <label for="Sponsor">Executive Sponsor:</label><br>
+      <input type="text" id="Sponsor" name="Sponsor" value="{{ data.get('Sponsor', '') }}" />
+    </p>
+  
+    <p>
+      <label for="Problem">Problem Definition:</label><br>
+      <textarea id="Problem" name="Problem">{{ data.get('Problem', '') }}</textarea>
+    </p>
+  
+    <p>
+      <label for="Outcome">Outcome Description:</label><br>
+      <textarea id="Outcome" name="Outcome">{{ data.get('Outcome', '') }}</textarea>
+    </p>
+  
+    <p>
+      <label for="Recommendation">Primary Recommendation:</label><br>
+      <textarea id="Recommendation" name="Recommendation">{{ data.get('Recommendation', '') }}</textarea>
+    </p>
+  
 
     <h3>Options Table</h3>
     <table>
