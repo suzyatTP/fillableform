@@ -151,7 +151,7 @@ def submit():
     top_fields = [
         ("Topic", data.get("Topic", "")),
         ("Point Person", data.get("PointPerson", "")),
-        ("Role of Executive Team", data.get("Role", "")),
+        ("Role of Executive Team (consult, inform, decide)", data.get("Role", "")),
         ("Executive Sponsor", data.get("Sponsor", "")),
         ("Problem Definition", data.get("Problem", "")),
         ("Outcome Description", data.get("Outcome", "")),
@@ -223,7 +223,7 @@ def submit():
     y -= 20
 
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "Key Actions:")
+    p.drawString(50, y, "Key Actions: (Who, What, When?)")
     y -= 10
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
