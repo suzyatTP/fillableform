@@ -1,56 +1,74 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, redirect, url_for, flash
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 import os
 import io
 import json
+import psycopg2
 import sqlite3
 
 app = Flask(__name__)
+def get_db_connection():
+    return psycopg2.connect(os.environ.get("DATABASE_URL"))
+app.secret_key = 'your_secret_key_here'
+DB_FILE = 'drafts.db'
 
 def init_db():
-    conn = sqlite3.connect('drafts.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
         CREATE TABLE IF NOT EXISTS drafts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            draft_name TEXT UNIQUE NOT NULL,
-            data TEXT NOT NULL
+            id SERIAL PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            content TEXT NOT NULL
         )
     """)
     conn.commit()
     conn.close()
 
-import json
+init_db()
 
-def save_draft_to_db(draft_name, content_dict):
-    conn = sqlite3.connect('drafts.db')
+# --- Helper functions for DB ---
+def save_draft_to_db(name, content_dict):
+    conn = get_db_connection()
     c = conn.cursor()
-
-    # Convert the content dictionary to a JSON string
     json_data = json.dumps(content_dict)
-
-    # Insert the draft data into the database
     c.execute("""
-        INSERT INTO drafts (draft_name, data)
-        VALUES (?, ?)
-        ON CONFLICT(draft_name) DO UPDATE SET data = excluded.data
-    """, (draft_name, json_data))
-
+        INSERT INTO drafts (name, content)
+        VALUES (%s, %s)
+        ON CONFLICT (name)
+        DO UPDATE SET content = EXCLUDED.content
+    """, (name, json_data))
     conn.commit()
     conn.close()
 
-def load_draft_from_db(draft_name):
-    conn = sqlite3.connect('drafts.db')
+def load_draft_from_db(name):
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT data FROM drafts WHERE draft_name = ?", (draft_name,))
+    c.execute("SELECT content FROM drafts WHERE name = %s", (name,))
     row = c.fetchone()
     conn.close()
     if row:
-        return json.loads(row[0])  # Deserialize the data
+        return json.loads(row[0])
     return {}
 
+def list_drafts():
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT name FROM drafts")
+    drafts = [row[0] for row in c.fetchall()]
+    conn.close()
+    return drafts
+
+def delete_draft(name):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM drafts WHERE name = %s", (name,))
+    conn.commit()
+    conn.close()
+
+# --- PDF utilities ---
 def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14):
     p.setFont(font_name, font_size)
     words = text.split()
@@ -87,29 +105,37 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
         lines.append(current_line)
     return line_height * len(lines) + 10
 
-@app.route('/')
+# --- Routes ---
+@app.route('/', methods=['GET'])
 def form():
-    data = {}
-    if os.path.exists("saved_draft.json"):
-        with open("saved_draft.json", "r") as f:
-            data = json.load(f)
-    return render_template('form.html', data=data)
+    draft_name = request.args.get("draft")
+    data = load_draft_from_db(draft_name) if draft_name else {}
+    return render_template('form.html', data=data, drafts=list_drafts(), selected_draft=draft_name)
 
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
     action = data.get("action")
-    draft_name = data.get("draft_name")  # Get the draft name from the form
+    draft_name = data.get("draft_name")
 
     if action == "save":
         if not draft_name:
-            return "Please enter a draft name."
+            flash("Please enter a name for your draft.")
+        else:
+            save_draft_to_db(draft_name, data)
+            flash(f"Draft '{draft_name}' saved successfully.")
+        return redirect(url_for('form', draft=draft_name))
 
-        # Save the draft data to the database
-        save_draft_to_db(draft_name, data)
-        return f"Draft '{draft_name}' saved! You can return later to continue."
+    if action == "delete":
+        if draft_name:
+            delete_draft(draft_name)
+            flash(f"Draft '{draft_name}' has been deleted.")
+        return redirect(url_for('form'))
 
-    # Header
+    # --- PDF Generation ---
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
     p.setFillColorRGB(0.15, 0.18, 0.25)
     p.rect(0, height - 70, width, 70, fill=1, stroke=0)
     p.setFillColor(colors.white)
@@ -123,8 +149,6 @@ def submit():
 
     p.setFillColor(colors.black)
     y = height - 90
-
-    # Top Fields
     top_fields = [
         ("Topic", data.get("Topic", "")),
         ("Point Person", data.get("PointPerson", "")),
@@ -134,99 +158,77 @@ def submit():
         ("Outcome Description", data.get("Outcome", "")),
         ("Primary Recommendation", data.get("Recommendation", ""))
     ]
-
     for label, val in top_fields:
         box_height = get_text_height(val, width - 100)
         if y - box_height < 60:
             p.showPage()
             y = height - 50
-        p.setFont("Helvetica-Bold", 10)
+        p.setFont("Helvetica-Bold", 12)
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-        p.setFont("Helvetica", 10)
-        draw_wrapped_text(p, 55, y - 10, val, width - 110)
+        p.setFont("Helvetica-Bold", 12)
+        draw_wrapped_text(p, 55, y - 15, val, width - 110)
         y -= (box_height + 20)
 
-    # Options Table
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
     y -= 20
 
     rows = [
-        ("Description", [data.get("Option1Desc", ""), data.get("Option2Desc", ""), data.get("Option3Desc", "")]),
+        ("Description", [data.get("Option1Description", ""), data.get("Option2Description", ""), data.get("Option3Description", "")]),
         ("Pros", [data.get("Option1Pros", ""), data.get("Option2Pros", ""), data.get("Option3Pros", "")]),
         ("Cons", [data.get("Option1Cons", ""), data.get("Option2Cons", ""), data.get("Option3Cons", "")]),
-        ("Benefit/Revenue", [data.get("Option1Benefit", ""), data.get("Option2Benefit", ""), data.get("Option3Benefit", "")]),
-        ("Obstacles", [data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")]),
+        ("Benefits/Revenue", [data.get("Option1Benefits/Revenue", ""), data.get("Option2Benefits/Revenue", ""), data.get("Option3Benefits/Revenue", "")]),
+        ("Obstacles", [data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")])
     ]
-
     col_width = (width - 100) / 4
-    first_row_heights = [get_text_height(txt, col_width - 10) for txt in rows[0][1]]
-    first_row_height = max(first_row_heights) + 20
-    header_row_height = 30
-
-    if y - (first_row_height + header_row_height) < 60:
-        p.showPage()
-        y = height - 50
-
     p.setFont("Helvetica-Bold", 10)
-    header_y = y
-    p.rect(50, header_y - 20, col_width, 20, stroke=1, fill=0)
-
+    p.rect(50, y - 20, col_width, 20, stroke=1, fill=0)
     for i, header in enumerate(["Option 1", "Option 2", "Option 3"]):
         x = 50 + col_width * (i + 1)
-        p.rect(x, header_y - 20, col_width, 20, stroke=1, fill=0)
-        p.drawCentredString(x + col_width / 2, header_y - 15, header)
-
+        p.rect(x, y - 20, col_width, 20, stroke=1, fill=0)
+        p.drawCentredString(x + col_width / 2, y - 15, header)
     y -= 30
-    col_w = (width - 100) / 4
-    for label, options in rows:
-        heights = [get_text_height(txt, col_w - 10) for txt in options]
-        row_h = max(heights) + 20
 
+    for label, options in rows:
+        heights = [get_text_height(txt, col_width - 10) for txt in options]
+        row_h = max(heights) + 20
         if y - row_h < 60:
             p.showPage()
             y = height - 50
-
         p.setFont("Helvetica-Bold", 10)
-        p.rect(50, y - row_h, col_w, row_h, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 20, label, col_w - 10)
-
+        p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
+        draw_wrapped_text(p, 55, y - 20, label, col_width - 10)
         for i in range(3):
-            x = 50 + (i + 1) * col_w
+            x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 10)
-            p.rect(x, y - row_h, col_w, row_h, stroke=1, fill=0)
-            draw_wrapped_text(p, x + 5, y - 20, options[i], col_w - 10)
+            p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
+            draw_wrapped_text(p, x + 5, y - 20, options[i], col_width - 10)
         y -= (row_h + 10)
 
-    # Final Decision
     decision = data.get("Decision", "")
     box_height = get_text_height(decision, width - 100)
     if y - box_height < 60:
         p.showPage()
         y = height - 50
-    p.setFont("Helvetica-Bold", 10)
+    p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Final Decision")
     p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-    p.setFont("Helvetica", 10)
+    p.setFont("Helvetica", 12)
     draw_wrapped_text(p, 55, y - 20, decision, width - 110)
     y -= (box_height + 20)
 
-    # Key Actions
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
     y -= 20
-
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
         box_height = get_text_height(action, width - 130)
         if y - box_height < 60:
             p.showPage()
             y = height - 50
-
         p.setFont("Helvetica-Bold", 10)
         p.drawString(55, y - 15, f"{i}.")
-
         p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 10)
         draw_wrapped_text(p, 80, y - 20, action, width - 130)
