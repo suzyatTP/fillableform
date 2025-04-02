@@ -160,27 +160,15 @@ def submit():
     ]
     for label, val in top_fields:
         box_height = get_text_height(val, width - 100)
-
-    # If not enough room, start new page
-    if y - box_height - 30 < 60:
-        p.showPage()
-        y = height - 50
-
-    # Label
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, label)
-    y -= 15  # Move down before drawing the box
-
-    # Box
-    p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-
-    # Text inside the box
-    p.setFont("Helvetica", 12)
-    text_y = y - 10
-    draw_wrapped_text(p, 55, text_y, val, width - 110)
-
-    # Space before next section
-    y -= (box_height + 25)
+        if y - box_height < 60:
+            p.showPage()
+            y = height - 50
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y, label)
+        p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
+        p.setFont("Helvetica-Bold", 12)
+        draw_wrapped_text(p, 55, y - 25, val, width - 110)
+        y -= (box_height + 20)
 
     p.showPage()              
     y = height - 90            
@@ -218,7 +206,7 @@ def submit():
             x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 10)
             p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
-            draw_wrapped_text(p, x + 5, y - 15, options[i], col_width - 10)
+            draw_wrapped_text(p, x + 5, y - 10, options[i], col_width - 10)
         y -= (row_h + 10)
         y -= 10 
 
@@ -233,13 +221,13 @@ def submit():
     p.drawString(50, y, "Final Decision")
     p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
     p.setFont("Helvetica", 12)
-    draw_wrapped_text(p, 55, y - 20, decision, width - 110)
+    draw_wrapped_text(p, 55, y - 10, decision, width - 110)
     y -= (box_height + 20)
     y -= 20
 
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
-    y -= 20
+    y -= 10
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
         box_height = get_text_height(action, width - 130)
@@ -250,7 +238,7 @@ def submit():
         p.drawString(55, y - 15, f"{i}.")
         p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 10)
-        draw_wrapped_text(p, 80, y - 20, action, width - 130)
+        draw_wrapped_text(p, 80, y - 10, action, width - 130)
         y -= (box_height + 15)
 
     p.save()
