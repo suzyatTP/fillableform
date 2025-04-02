@@ -223,6 +223,7 @@ def submit():
     p.setFont("Helvetica", 12)
     draw_wrapped_text(p, 55, y - 20, decision, width - 110)
     y -= (box_height + 20)
+    y -= 20
 
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
