@@ -5,53 +5,68 @@ from reportlab.lib import colors
 import os
 import io
 import json
+import psycopg2
 import sqlite3
 
 app = Flask(__name__)
+def get_db_connection():
+    return psycopg2.connect(os.environ.get("DATABASE_URL"))
 app.secret_key = 'your_secret_key_here'
 DB_FILE = 'drafts.db'
 
-# --- SQLite setup ---
 def init_db():
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS drafts (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT UNIQUE NOT NULL,
-                        content TEXT NOT NULL
-                    )''')
-        conn.commit()
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS drafts (
+            id SERIAL PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            content TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
 
 init_db()
 
 # --- Helper functions for DB ---
 def save_draft_to_db(name, content_dict):
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        json_data = json.dumps(content_dict)
-        c.execute("REPLACE INTO drafts (name, content) VALUES (?, ?)", (name, json_data))
-        conn.commit()
+    conn = get_db_connection()
+    c = conn.cursor()
+    json_data = json.dumps(content_dict)
+    c.execute("""
+        INSERT INTO drafts (name, content)
+        VALUES (%s, %s)
+        ON CONFLICT (name)
+        DO UPDATE SET content = EXCLUDED.content
+    """, (name, json_data))
+    conn.commit()
+    conn.close()
 
 def load_draft_from_db(name):
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        c.execute("SELECT content FROM drafts WHERE name = ?", (name,))
-        row = c.fetchone()
-        if row:
-            return json.loads(row[0])
-        return {}
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT content FROM drafts WHERE name = %s", (name,))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return json.loads(row[0])
+    return {}
 
 def list_drafts():
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        c.execute("SELECT name FROM drafts")
-        return [row[0] for row in c.fetchall()]
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT name FROM drafts")
+    drafts = [row[0] for row in c.fetchall()]
+    conn.close()
+    return drafts
 
 def delete_draft(name):
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        c.execute("DELETE FROM drafts WHERE name = ?", (name,))
-        conn.commit()
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM drafts WHERE name = %s", (name,))
+    conn.commit()
+    conn.close()
 
 # --- PDF utilities ---
 def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14):

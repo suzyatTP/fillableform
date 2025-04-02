@@ -25,6 +25,7 @@ packaging==24.2
 pandas==2.2.3
 pdfrw==0.4
 pillow==11.1.0
+psycopg2-binary==2.9.10
 pycparser==2.22
 pydyf==0.11.0
 pyogrio==0.10.0
