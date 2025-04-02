@@ -170,12 +170,12 @@ def submit():
         draw_wrapped_text(p, 55, y - 15, val, width - 110)
         y -= (box_height + 20)
 
-    p.showPage()
-    y = height - 90
-
+    p.showPage()              
+    y = height - 90            
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
     y -= 20
+
 
     rows = [
         ("Description", [data.get("Option1Description", ""), data.get("Option2Description", ""), data.get("Option3Description", "")]),
@@ -211,7 +211,9 @@ def submit():
         y -= 10 
 
     decision = data.get("Decision", "")
-    box_height = get_text_height(decision, width - 100) + 50
+    text_height = get_text_height(decision, width - 100)
+    box_height = max(text_height, 100)  # Ensures it's never smaller than 100
+
     if y - box_height < 60:
         p.showPage()
         y = height - 50
