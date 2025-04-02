@@ -20,6 +20,10 @@
       flex-direction: column;
     }
 
+    .first-form-row {
+      margin-top: 20px;
+    }
+
     .header {
       background-color: #272e3d;
       color: white;
@@ -120,7 +124,7 @@
   <form action="/submit" method="POST">
 
     <!-- Draft Name + Topic -->
-    <div class="form-row">
+    <div class="form-row first-form-row">
       <div class="form-group">
         <label for="draft_name">Draft Name:</label>
         <input type="text" id="draft_name" name="draft_name" value="{{ selected_draft or '' }}" />
