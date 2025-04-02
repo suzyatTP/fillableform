@@ -6,7 +6,6 @@ import os
 import io
 import json
 import psycopg2
-import sqlite3
 
 app = Flask(__name__)
 def get_db_connection():
@@ -169,6 +168,9 @@ def submit():
         p.setFont("Helvetica-Bold", 12)
         draw_wrapped_text(p, 55, y - 15, val, width - 110)
         y -= (box_height + 20)
+
+p.showPage()
+y = height - 90
 
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
