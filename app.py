@@ -169,8 +169,8 @@ def submit():
         draw_wrapped_text(p, 55, y - 15, val, width - 110)
         y -= (box_height + 20)
 
-p.showPage()
-y = height - 90
+    p.showPage()
+    y = height - 90
 
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
@@ -238,7 +238,9 @@ y = height - 90
 
     p.save()
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name="Strategic_Topic_Summary.pdf", mimetype='application/pdf')
+    pdf_filename = f"{draft_name or 'Strategic_Topic_Summary'}.pdf"
+    return send_file(buffer, as_attachment=True, download_name=pdf_filename, mimetype='application/pdf')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
