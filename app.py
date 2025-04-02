@@ -207,7 +207,7 @@ def submit():
             p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
             draw_wrapped_text(p, x + 5, y - 20, options[i], col_width - 10)
         y -= (row_h + 10)
-        y -= 20
+        y -= 8
 
     decision = data.get("Decision", "")
     box_height = get_text_height(decision, width - 100)
