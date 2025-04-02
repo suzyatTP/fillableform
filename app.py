@@ -151,7 +151,7 @@ def submit():
         p.setFont("Helvetica-Bold", 12)
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-        p.setFont("Helvetica", 10)
+        p.setFont("Helvetica-Bold", 102
         draw_wrapped_text(p, 55, y - 15, val, width - 110)
         y -= (box_height + 20)
 
@@ -196,7 +196,7 @@ def submit():
     if y - box_height < 60:
         p.showPage()
         y = height - 50
-    p.setFont("Helvetica-Bold", 10)
+    p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Final Decision")
     p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
     p.setFont("Helvetica", 12)
