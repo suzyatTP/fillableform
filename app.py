@@ -68,8 +68,9 @@ def delete_draft(name):
     conn.close()
 
 # --- PDF utilities ---
-def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14):
-    p.setFont(font_name, font_size)
+def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14):
+    if font_name and font_size:
+        p.setFont(font_name, font_size)
     words = text.split()
     lines = []
     current_line = ""
@@ -200,7 +201,7 @@ def submit():
             y = height - 50
         p.setFont("Helvetica-Bold", 10)
         p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 20, label, col_width - 10)
+        draw_wrapped_text(p, 55, y - 20, label.upper(), col_width - 10, "Helvetica-Bold", 11)
         for i in range(3):
             x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 10)
