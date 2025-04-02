@@ -130,6 +130,45 @@
       width: 300px;
     }
 
+    .decision-row,
+    .key-action-text {
+      width: 1000px;
+      max-width: 100%;
+    }
+
+    .key-actions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .key-action-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .key-action-number {
+      font-weight: bold;
+      font-size: 16px;
+      min-width: 20px;
+      text-align: right;
+      padding-top: 10px;
+    }
+
+    .key-action-text textarea,
+    .decision-row textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 14px;
+      font-family: Helvetica, sans-serif;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: #f2f2f2;
+    }
+
+
     select {
     font-size: 16px !important;
     padding: 5px !important;   
@@ -241,17 +280,22 @@ button:hover {
       {% endfor %}
     </table>
 
-    <p><label>Final Decision:<br>
-      <textarea name="Decision" style="width: 1100px">{{ data.get('Decision', '') }}</textarea></label></p>
+    <h3 class="section-header">Final Decision</h3>
+    <div class="decision-row">
+      <textarea name="Decision">{{ data.get('Decision', '') }}</textarea>
+    </div>
 
-      <h3 class="section-header">Key Actions (Who, What, When?)</h3>
+    <h3 class="section-header">Key Actions (Who, What, When?)</h3>
+    <div class="key-actions-container">
       {% for i in range(1, 6) %}
-        <p>
-          <label class="small-label">Key Action {{ i }}:</label><br>
-          <textarea name="Action{{ i }}">{{ data.get('Action' ~ i, '') }}</textarea>
-        </p>
-      {% endfor %}      
-
+        <div class="key-action-row">
+          <div class="key-action-number">{{ i }}.</div>
+          <div class="key-action-text">
+            <textarea name="Action{{ i }}">{{ data.get('Action' ~ i, '') }}</textarea>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
       
     <button type="submit" name="action" value="save">Save Draft</button>
     <button type="submit" name="action" value="submit">Generate PDF</button>
