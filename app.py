@@ -227,7 +227,7 @@ def submit():
 
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
-    y -= 10
+    y -= 20
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
         box_height = get_text_height(action, width - 130)
