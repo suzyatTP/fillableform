@@ -10,6 +10,7 @@ import psycopg2
 app = Flask(__name__)
 def get_db_connection():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
+app.secret_key = 'your_secret_key_here'
 DB_FILE = 'drafts.db'
 
 def init_db():
@@ -206,6 +207,7 @@ def submit():
             p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
             draw_wrapped_text(p, x + 5, y - 20, options[i], col_width - 10)
         y -= (row_h + 10)
+        y -= 20
 
     decision = data.get("Decision", "")
     box_height = get_text_height(decision, width - 100)
@@ -218,6 +220,7 @@ def submit():
     p.setFont("Helvetica", 12)
     draw_wrapped_text(p, 55, y - 20, decision, width - 110)
     y -= (box_height + 20)
+    y -= 20
 
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Key Actions:")
