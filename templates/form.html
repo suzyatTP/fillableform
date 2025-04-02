@@ -56,6 +56,13 @@
     input[type="text"] {
       width: 300px;
     }
+
+    select {
+    font-size: 18px !important; /* Adjust font size here, adding !important for higher priority */
+    padding: 5px !important;    /* Adjust padding if needed */
+    width: 300px !important;    /* Adjust the width as needed */
+    }
+
   </style>
 </head>
 <body>
@@ -80,7 +87,6 @@
     {% endfor %}
   </select>
 </form>
-
 
   <form action="/submit" method="POST">
     <p><label>Draft Name: <input type="text" name="draft_name" value="{{ selected_draft or '' }}" /></label></p>

@@ -10,6 +10,7 @@ import psycopg2
 app = Flask(__name__)
 def get_db_connection():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
+app.secret_key = 'your_secret_key_here'
 DB_FILE = 'drafts.db'
 
 def init_db():

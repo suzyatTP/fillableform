@@ -10,6 +10,7 @@ import psycopg2
 app = Flask(__name__)
 def get_db_connection():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
+app.secret_key = 'your_secret_key_here'
 DB_FILE = 'drafts.db'
 
 def init_db():
@@ -18,8 +19,10 @@ def init_db():
     c.execute("""
         CREATE TABLE IF NOT EXISTS drafts (
             id SERIAL PRIMARY KEY,
-            name TEXT UNIQUE NOT NULL,
-            content TEXT NOT NULL
+            name TEXT NOT NULL,
+            content TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            UNIQUE(name, ip_address)
         )
     """)
     conn.commit()
@@ -28,41 +31,41 @@ def init_db():
 init_db()
 
 # --- Helper functions for DB ---
-def save_draft_to_db(name, content_dict):
+def save_draft_to_db(name, content_dict, ip_address):
     conn = get_db_connection()
     c = conn.cursor()
     json_data = json.dumps(content_dict)
     c.execute("""
-        INSERT INTO drafts (name, content)
-        VALUES (%s, %s)
-        ON CONFLICT (name)
+        INSERT INTO drafts (name, content, ip_address)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (name, ip_address)
         DO UPDATE SET content = EXCLUDED.content
-    """, (name, json_data))
+    """, (name, json_data, ip_address))
     conn.commit()
     conn.close()
 
-def load_draft_from_db(name):
+def load_draft_from_db(name, ip_address):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT content FROM drafts WHERE name = %s", (name,))
+    c.execute("SELECT content FROM drafts WHERE name = %s AND ip_address = %s", (name, ip_address))
     row = c.fetchone()
     conn.close()
     if row:
         return json.loads(row[0])
     return {}
 
-def list_drafts():
+def list_drafts(ip_address):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT name FROM drafts")
+    c.execute("SELECT name FROM drafts WHERE ip_address = %s", (ip_address,))
     drafts = [row[0] for row in c.fetchall()]
     conn.close()
     return drafts
 
-def delete_draft(name):
+def delete_draft(name, ip_address):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("DELETE FROM drafts WHERE name = %s", (name,))
+    c.execute("DELETE FROM drafts WHERE name = %s AND ip_address = %s", (name, ip_address))
     conn.commit()
     conn.close()
 
@@ -106,27 +109,29 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
 # --- Routes ---
 @app.route('/', methods=['GET'])
 def form():
+    ip = request.remote_addr
     draft_name = request.args.get("draft")
-    data = load_draft_from_db(draft_name) if draft_name else {}
-    return render_template('form.html', data=data, drafts=list_drafts(), selected_draft=draft_name)
+    data = load_draft_from_db(draft_name, ip) if draft_name else {}
+    return render_template('form.html', data=data, drafts=list_drafts(ip), selected_draft=draft_name)
 
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
     action = data.get("action")
     draft_name = data.get("draft_name")
+    ip = request.remote_addr
 
     if action == "save":
         if not draft_name:
             flash("Please enter a name for your draft.")
         else:
-            save_draft_to_db(draft_name, data)
+            save_draft_to_db(draft_name, data, ip)
             flash(f"Draft '{draft_name}' saved successfully.")
         return redirect(url_for('form', draft=draft_name))
 
     if action == "delete":
         if draft_name:
-            delete_draft(draft_name)
+            delete_draft(draft_name, ip)
             flash(f"Draft '{draft_name}' has been deleted.")
         return redirect(url_for('form'))
 
