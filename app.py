@@ -68,7 +68,7 @@ def delete_draft(name):
     conn.close()
 
 # --- PDF utilities ---
-def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14):
+def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14, top_padding=5, bottom_padding=5):
     if font_name and font_size:
         p.setFont(font_name, font_size)
     words = text.split()
@@ -83,12 +83,17 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, 
             current_line = word
     if current_line:
         lines.append(current_line)
+    
+    # Start drawing below top padding
+    y -= top_padding
+
     for line in lines:
         p.drawString(x, y, line)
         y -= line_height
-    return len(lines) * line_height
 
-def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14):
+    return len(lines) * line_height + top_padding + bottom_padding
+
+def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14, top_padding=5, bottom_padding=5):
     dummy = canvas.Canvas(io.BytesIO())
     dummy.setFont(font_name, font_size)
     words = text.split()
@@ -103,7 +108,7 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
             current_line = word
     if current_line:
         lines.append(current_line)
-    return line_height * len(lines) + 10
+    return (line_height * len(lines)) + top_padding + bottom_padding
 
 # --- Routes ---
 @app.route('/', methods=['GET'])
@@ -159,7 +164,7 @@ def submit():
         ("Primary Recommendation", data.get("Recommendation", ""))
     ]
     for label, val in top_fields:
-        box_height = get_text_height(val, width - 100)
+        box_height = get_text_height(val, width - 100, font_size=11, top_padding=5, bottom_padding=5)
         if y - box_height < 60:
             p.showPage()
             y = height - 50
@@ -167,7 +172,7 @@ def submit():
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 11)
-        draw_wrapped_text(p, 55, y - 10, val, width - 110)
+        draw_wrapped_text(p, 55, y - 20, decision, width - 110, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
         y -= (box_height + 15)
 
     p.showPage()
@@ -201,7 +206,7 @@ def submit():
             y = height - 50
         p.setFont("Helvetica-Bold", 10)
         p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 20, label, col_width - 10, "Helvetica-Bold", 11)
+        draw_wrapped_text(p, 55, y - 10, label, col_width - 10, font_name="Helvetica-Bold", font_size=11, top_padding=5, bottom_padding=5)
         for i in range(3):
             x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 11)
@@ -211,7 +216,7 @@ def submit():
         y -= 8
 
     decision = data.get("Decision", "")
-    box_height = get_text_height(decision, width - 100)
+    box_height = get_text_height(decision, width - 100, font_size=11, top_padding=5, bottom_padding=5)
     if y - box_height < 60:
         p.showPage()
         y = height - 50
@@ -219,7 +224,7 @@ def submit():
     p.drawString(50, y, "Final Decision")
     p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
     p.setFont("Helvetica", 12)
-    draw_wrapped_text(p, 55, y - 20, decision, width - 110)
+    draw_wrapped_text(p, 55, y - 20, decision, width - 110, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
     y -= (box_height + 15)
     y -= 20
 
@@ -228,7 +233,7 @@ def submit():
     y -= 10
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
-        box_height = get_text_height(action, width - 130)
+        box_height = get_text_height(action, width - 130, font_size=11, top_padding=5, bottom_padding=5)
         if y - box_height < 60:
             p.showPage()
             y = height - 50
@@ -236,7 +241,7 @@ def submit():
         p.drawString(55, y - 15, f"{i}.")
         p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 11)
-        draw_wrapped_text(p, 80, y - 20, action, width - 130)
+        draw_wrapped_text(p, 80, y - 10, action, width - 130, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
         y -= (box_height + 15)
 
     logo_path = os.path.join("static", "logo.png")
