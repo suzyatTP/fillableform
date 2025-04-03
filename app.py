@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for, flash
+from flask import Flask, render_template, request, send_file, redirect, url_for, flash, session
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -16,15 +16,23 @@ DB_FILE = 'drafts.db'
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
+
+    # Create the table if it doesn't exist
     c.execute("""
         CREATE TABLE IF NOT EXISTS drafts (
             id SERIAL PRIMARY KEY,
-            name TEXT UNIQUE NOT NULL,
-            content TEXT NOT NULL
+            name TEXT NOT NULL,
+            content TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            UNIQUE(name, user_id)
         )
     """)
 
-    c.execute("ALTER TABLE drafts ADD COLUMN IF NOT EXISTS user_id TEXT;")
+    # If the table already exists, try to add the column (optional safety)
+    try:
+        c.execute("ALTER TABLE drafts ADD COLUMN IF NOT EXISTS user_id TEXT;")
+    except Exception as e:
+        print("user_id column may already exist:", e)
 
     conn.commit()
     conn.close()
@@ -32,41 +40,41 @@ def init_db():
 init_db()
 
 # --- Helper functions for DB ---
-def save_draft_to_db(name, content_dict):
+def save_draft_to_db(name, content_dict, user_id):
     conn = get_db_connection()
     c = conn.cursor()
     json_data = json.dumps(content_dict)
     c.execute("""
-        INSERT INTO drafts (name, content)
+        INSERT INTO drafts (name, content, user_id)
         VALUES (%s, %s)
-        ON CONFLICT (name)
+        ON CONFLICT (name, user_id)
         DO UPDATE SET content = EXCLUDED.content
-    """, (name, json_data))
+    """, (name, json_data, user_id))
     conn.commit()
     conn.close()
 
-def load_draft_from_db(name):
+def load_draft_from_db(name,user_id):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT content FROM drafts WHERE name = %s", (name,))
+    c.execute("SELECT content FROM drafts WHERE name = %s AND user_id = %s", (name, user_id))
     row = c.fetchone()
     conn.close()
     if row:
         return json.loads(row[0])
     return {}
 
-def list_drafts():
+def list_drafts(user_id):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT name FROM drafts")
+    c.execute("SELECT name FROM drafts WHERE user_id = %s", (user_id,))
     drafts = [row[0] for row in c.fetchall()]
     conn.close()
     return drafts
 
-def delete_draft(name):
+def delete_draft(name, user_id):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("DELETE FROM drafts WHERE name = %s", (name,))
+    c.execute("DELETE FROM drafts WHERE name = %s AND user_id = %s", (name, user_id))
     conn.commit()
     conn.close()
 
@@ -112,26 +120,28 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
 @app.route('/', methods=['GET'])
 def form():
     draft_name = request.args.get("draft")
-    data = load_draft_from_db(draft_name) if draft_name else {}
-    return render_template('form.html', data=data, drafts=list_drafts(), selected_draft=draft_name)
+    user_id = session.get('user_id')
+    data = load_draft_from_db(draft_name, user_id) if draft_name else {}
+    return render_template('form.html', data=data, drafts=list_drafts(user_id), selected_draft=draft_name)
 
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
     action = data.get("action")
     draft_name = data.get("draft_name")
+    user_id = session.get("user_id") 
 
     if action == "save":
         if not draft_name:
             flash("Please enter a name for your draft.")
         else:
-            save_draft_to_db(draft_name, data)
+            save_draft_to_db(draft_name, data, user_id)  
             flash(f"Draft '{draft_name}' saved successfully.")
         return redirect(url_for('form', draft=draft_name))
 
     if action == "delete":
         if draft_name:
-            delete_draft(draft_name)
+            delete_draft(draft_name, user_id)  
             flash(f"Draft '{draft_name}' has been deleted.")
         return redirect(url_for('form'))
 
