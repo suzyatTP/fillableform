@@ -166,8 +166,8 @@ def submit():
         p.setFont("Helvetica-Bold", 12)
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-        p.setFont("Helvetica", 12)
-        draw_wrapped_text(p, 55, y - 15, val, width - 110)
+        p.setFont("Helvetica", 11)
+        draw_wrapped_text(p, 55, y - 10, val, width - 110)
         y -= (box_height + 20)
 
     p.showPage()
@@ -204,7 +204,7 @@ def submit():
         draw_wrapped_text(p, 55, y - 20, label, col_width - 10, "Helvetica-Bold", 11)
         for i in range(3):
             x = 50 + (i + 1) * col_width
-            p.setFont("Helvetica", 10)
+            p.setFont("Helvetica", 11)
             p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
             draw_wrapped_text(p, x + 5, y - 20, options[i], col_width - 10)
         y -= (row_h + 10)
@@ -218,9 +218,9 @@ def submit():
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Final Decision")
     p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-    p.setFont("Helvetica", 12)
-    draw_wrapped_text(p, 55, y - 15, decision, width - 110)
-    y -= (box_height + 20)
+    p.setFont("Helvetica", 11)
+    draw_wrapped_text(p, 55, y - 20, decision, width - 110)
+    y -= (box_height + 15)
     y -= 20
 
     p.setFont("Helvetica-Bold", 12)
@@ -235,7 +235,7 @@ def submit():
         p.setFont("Helvetica-Bold", 10)
         p.drawString(55, y - 15, f"{i}.")
         p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
-        p.setFont("Helvetica", 10)
+        p.setFont("Helvetica", 11)
         draw_wrapped_text(p, 80, y - 20, action, width - 130)
         y -= (box_height + 15)
 
