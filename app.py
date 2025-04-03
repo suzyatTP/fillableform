@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, send_file, redirect, url_for, flash, session
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_bcrypt import Bcrypt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -8,18 +10,17 @@ import json
 import psycopg2
 
 app = Flask(__name__)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # redirect to login page if not logged in
+bcrypt = Bcrypt(app)
+
 def get_db_connection():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
 app.secret_key = 'your_secret_key_here'
 DB_FILE = 'drafts.db'
 
-@app.before_request
-def set_user():
-    # allow ?user=abc to override
-    if 'user' in request.args:
-        session['user_id'] = request.args['user']
-    elif 'user_id' not in session:
-        session['user_id'] = 'user_123'
+import uuid
 
 def init_db():
     conn = get_db_connection()
@@ -86,6 +87,23 @@ def delete_draft(name, user_id):
     conn.commit()
     conn.close()
 
+class User(UserMixin):
+    def __init__(self, id, email):
+        self.id = id
+        self.email = email
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT id, email FROM users WHERE id = %s", (user_id,))
+    user = c.fetchone()
+    conn.close()
+    if user:
+        return User(id=user[0], email=user[1])
+    return None
+
+
 # --- PDF utilities ---
 def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14):
     if font_name and font_size:
@@ -125,19 +143,78 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
     return line_height * len(lines) + 10
 
 # --- Routes ---
-@app.route('/', methods=['GET'])
+@app.route('/')
+@login_required
 def form():
     draft_name = request.args.get("draft")
-    user_id = session.get('user_id')
+    user_id = current_user.id
     data = load_draft_from_db(draft_name, user_id) if draft_name else {}
     return render_template('form.html', data=data, drafts=list_drafts(user_id), selected_draft=draft_name)
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        try:
+            c.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (email, hashed_pw))
+            conn.commit()
+            flash("Registration successful. Please log in.")
+            return redirect(url_for('login'))
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            flash("Email already exists.")
+        finally:
+            conn.close()
+
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT id, password FROM users WHERE email = %s", (email,))
+        user = c.fetchone()
+        conn.close()
+
+        if user and bcrypt.check_password_hash(user[1], password):
+            user_obj = User(id=user[0], email=email)
+            login_user(user_obj)
+            flash("Logged in successfully.")
+            return redirect(url_for('form'))
+        else:
+            flash("Invalid email or password.")
+    return render_template('login.html')
+
+from flask_login import current_user
+
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("You have been logged out.")
+    return redirect(url_for('login'))
+
 @app.route('/submit', methods=['POST'])
+@login_required
 def submit():
     data = request.form.to_dict()
     action = data.get("action")
     draft_name = data.get("draft_name")
-    user_id = session.get("user_id") 
+    user_id = current_user.id  # 👈 use this now 
 
     if action == "save":
         if not draft_name:
