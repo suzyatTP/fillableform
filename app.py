@@ -15,8 +15,11 @@ DB_FILE = 'drafts.db'
 
 @app.before_request
 def set_user():
-    if 'user_id' not in session:
-        session['user_id'] = 'user_123'  # Temporary user ID
+    # allow ?user=abc to override
+    if 'user' in request.args:
+        session['user_id'] = request.args['user']
+    elif 'user_id' not in session:
+        session['user_id'] = 'user_123'
 
 def init_db():
     conn = get_db_connection()
