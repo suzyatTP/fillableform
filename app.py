@@ -88,6 +88,8 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, 
         y -= line_height
     return len(lines) * line_height
 
+draw_wrapped_text(p, 55, y - 20, label, col_width - 10, "Helvetica-Bold", 11)
+
 def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14):
     dummy = canvas.Canvas(io.BytesIO())
     dummy.setFont(font_name, font_size)
@@ -185,7 +187,7 @@ def submit():
         ("Obstacles", [data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")])
     ]
     col_width = (width - 100) / 4
-    p.setFont("Helvetica-Bold", 11)
+    p.setFont("Helvetica-Bold", 10)
     p.rect(50, y - 20, col_width, 20, stroke=1, fill=0)
     for i, header in enumerate(["Option 1", "Option 2", "Option 3"]):
         x = 50 + col_width * (i + 1)
@@ -201,7 +203,7 @@ def submit():
             y = height - 50
         p.setFont("Helvetica-Bold", 10)
         p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 20, label, col_width - 10, "Helvetica-Bold", 11)
+        draw_wrapped_text(p, 55, y - 20, label, col_width - 10)
         for i in range(3):
             x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 10)
