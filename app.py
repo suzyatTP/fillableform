@@ -172,7 +172,7 @@ def submit():
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 11)
-        draw_wrapped_text(p, 55, y - 20, decision, width - 110, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
+        draw_wrapped_text(p, 55, y - 20, val, width - 110, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
         y -= (box_height + 15)
 
     p.showPage()
