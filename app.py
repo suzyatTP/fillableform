@@ -185,7 +185,7 @@ def submit():
         ("Obstacles", [data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")])
     ]
     col_width = (width - 100) / 4
-    p.setFont("Helvetica-Bold", 12)
+    p.setFont("Helvetica-Bold", 11)
     p.rect(50, y - 20, col_width, 20, stroke=1, fill=0)
     for i, header in enumerate(["Option 1", "Option 2", "Option 3"]):
         x = 50 + col_width * (i + 1)
