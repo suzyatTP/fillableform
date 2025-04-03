@@ -239,6 +239,11 @@ def submit():
         draw_wrapped_text(p, 80, y - 20, action, width - 130)
         y -= (box_height + 15)
 
+    logo_path = os.path.join("static", "logo.png")
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, 50, 20, width=80, height=30, mask='auto')  # Adjust size/position as needed
+     
+
     p.save()
     buffer.seek(0)
     pdf_filename = f"{draft_name or 'Strategic_Topic_Summary'}.pdf"
