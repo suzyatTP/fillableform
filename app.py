@@ -46,7 +46,7 @@ def save_draft_to_db(name, content_dict, user_id):
     json_data = json.dumps(content_dict)
     c.execute("""
         INSERT INTO drafts (name, content, user_id)
-        VALUES (%s, %s)
+        VALUES (%s, %s, %s)
         ON CONFLICT (name, user_id)
         DO UPDATE SET content = EXCLUDED.content
     """, (name, json_data, user_id))
