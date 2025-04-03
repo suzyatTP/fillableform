@@ -135,9 +135,26 @@ def submit():
         return redirect(url_for('form'))
 
     # --- PDF Generation ---
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
+buffer = io.BytesIO()
+p = canvas.Canvas(buffer, pagesize=letter)  # p is now initialized!
+
+# Now your function calls using p will work
+for label, options in rows:
+    heights = [get_text_height(txt, col_width - 10) for txt in options]
+    row_h = max(heights) + 20
+    if y - row_h < 60:
+        p.showPage()  # Start a new page if the current one doesn't fit
+        y = height - 50
+    p.setFont("Helvetica-Bold", 10)
+    p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
+    draw_wrapped_text(p, 55, y - 20, label.upper(), col_width - 10, "Helvetica-Bold", 11)
+    for i in range(3):
+        x = 50 + (i + 1) * col_width
+        p.setFont("Helvetica", 10)
+        p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
+        draw_wrapped_text(p, x + 5, y - 20, options[i], col_width - 10)
+    y -= (row_h + 10)
+
     p.setFillColorRGB(0.15, 0.18, 0.25)
     p.rect(0, height - 70, width, 70, fill=1, stroke=0)
     p.setFillColor(colors.white)
@@ -160,6 +177,7 @@ def submit():
         ("Outcome Description", data.get("Outcome", "")),
         ("Primary Recommendation", data.get("Recommendation", ""))
     ]
+
     for label, val in top_fields:
         box_height = get_text_height(val, width - 100)
         if y - box_height < 60:
