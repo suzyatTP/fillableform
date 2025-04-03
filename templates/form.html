@@ -164,21 +164,6 @@ button:hover {
       <img src="{{ url_for('static', filename='overlay_icon.png') }}" alt="Logo" width="50">
     </div>
   </div>
-  <div style="margin-left: auto;">
-    {% if current_user.is_authenticated %}
-      <p style="margin: 0; font-size: 14px;">Logged in as: {{ current_user.email }}</p>
-      <a href="{{ url_for('logout') }}">
-        <button type="button">Logout</button>
-      </a>
-    {% else %}
-      <a href="{{ url_for('login') }}">
-        <button type="button">Login</button>
-      </a>
-      <a href="{{ url_for('register') }}">
-        <button type="button">Register</button>
-      </a>
-    {% endif %}
-  </div>  
 
   <form method="GET" action="/">
     <label for="draft">Load Draft:</label>

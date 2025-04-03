@@ -1,6 +1,4 @@
 from flask import Flask, render_template, request, send_file, redirect, url_for, flash, session
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from flask_bcrypt import Bcrypt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -10,23 +8,15 @@ import json
 import psycopg2
 
 app = Flask(__name__)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'  # redirect to login page if not logged in
-bcrypt = Bcrypt(app)
+app.secret_key = 'your_secret_key_here'
 
+# --- Database setup ---
 def get_db_connection():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
-app.secret_key = 'your_secret_key_here'
-DB_FILE = 'drafts.db'
-
-import uuid
 
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
-
-    # Create the table if it doesn't exist
     c.execute("""
         CREATE TABLE IF NOT EXISTS drafts (
             id SERIAL PRIMARY KEY,
@@ -36,13 +26,6 @@ def init_db():
             UNIQUE(name, user_id)
         )
     """)
-
-    # If the table already exists, try to add the column (optional safety)
-    try:
-        c.execute("ALTER TABLE drafts ADD COLUMN IF NOT EXISTS user_id TEXT;")
-    except Exception as e:
-        print("user_id column may already exist:", e)
-
     conn.commit()
     conn.close()
 
@@ -62,7 +45,7 @@ def save_draft_to_db(name, content_dict, user_id):
     conn.commit()
     conn.close()
 
-def load_draft_from_db(name,user_id):
+def load_draft_from_db(name, user_id):
     conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT content FROM drafts WHERE name = %s AND user_id = %s", (name, user_id))
@@ -86,23 +69,6 @@ def delete_draft(name, user_id):
     c.execute("DELETE FROM drafts WHERE name = %s AND user_id = %s", (name, user_id))
     conn.commit()
     conn.close()
-
-class User(UserMixin):
-    def __init__(self, id, email):
-        self.id = id
-        self.email = email
-
-@login_manager.user_loader
-def load_user(user_id):
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, email FROM users WHERE id = %s", (user_id,))
-    user = c.fetchone()
-    conn.close()
-    if user:
-        return User(id=user[0], email=user[1])
-    return None
-
 
 # --- PDF utilities ---
 def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14):
@@ -144,89 +110,30 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
 
 # --- Routes ---
 @app.route('/')
-@login_required
 def form():
     draft_name = request.args.get("draft")
-    user_id = current_user.id
+    user_id = request.remote_addr
     data = load_draft_from_db(draft_name, user_id) if draft_name else {}
     return render_template('form.html', data=data, drafts=list_drafts(user_id), selected_draft=draft_name)
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
-
-        conn = get_db_connection()
-        c = conn.cursor()
-        try:
-            c.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (email, hashed_pw))
-            conn.commit()
-            flash("Registration successful. Please log in.")
-            return redirect(url_for('login'))
-        except psycopg2.errors.UniqueViolation:
-            conn.rollback()
-            flash("Email already exists.")
-        finally:
-            conn.close()
-
-    return render_template('register.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT id, password FROM users WHERE email = %s", (email,))
-        user = c.fetchone()
-        conn.close()
-
-        if user and bcrypt.check_password_hash(user[1], password):
-            user_obj = User(id=user[0], email=email)
-            login_user(user_obj)
-            flash("Logged in successfully.")
-            return redirect(url_for('form'))
-        else:
-            flash("Invalid email or password.")
-    return render_template('login.html')
-
-from flask_login import current_user
-
-@app.context_processor
-def inject_user():
-    return dict(current_user=current_user)
-
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash("You have been logged out.")
-    return redirect(url_for('login'))
-
 @app.route('/submit', methods=['POST'])
-@login_required
 def submit():
     data = request.form.to_dict()
     action = data.get("action")
     draft_name = data.get("draft_name")
-    user_id = current_user.id  # 👈 use this now 
+    user_id = request.remote_addr
 
     if action == "save":
         if not draft_name:
             flash("Please enter a name for your draft.")
         else:
-            save_draft_to_db(draft_name, data, user_id)  
+            save_draft_to_db(draft_name, data, user_id)
             flash(f"Draft '{draft_name}' saved successfully.")
         return redirect(url_for('form', draft=draft_name))
 
     if action == "delete":
         if draft_name:
-            delete_draft(draft_name, user_id)  
+            delete_draft(draft_name, user_id)
             flash(f"Draft '{draft_name}' has been deleted.")
         return redirect(url_for('form'))
 
@@ -339,14 +246,12 @@ def submit():
 
     logo_path = os.path.join("static", "logo.png")
     if os.path.exists(logo_path):
-        p.drawImage(logo_path, 50, 20, width=80, height=30, mask='auto')  # Adjust size/position as needed
-     
+        p.drawImage(logo_path, 50, 20, width=80, height=30, mask='auto')
 
     p.save()
     buffer.seek(0)
     pdf_filename = f"{draft_name or 'Strategic_Topic_Summary'}.pdf"
     return send_file(buffer, as_attachment=True, download_name=pdf_filename, mimetype='application/pdf')
-
 
 if __name__ == '__main__':
     app.run(debug=True)
