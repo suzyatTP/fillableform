@@ -187,7 +187,7 @@ def submit():
         p.setFont("Helvetica-Bold", 12)
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-        p.setFont("Helvetica-Bold", 12)
+        p.setFont("Helvetica", 12)
         draw_wrapped_text(p, 55, y - 20, val, width - 110)
         y -= (box_height + 20)
 
