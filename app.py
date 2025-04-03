@@ -36,7 +36,7 @@ def save_draft_to_db(name, content_dict):
     c.execute("""
         INSERT INTO drafts (name, content)
         VALUES (%s, %s)
-        ON CONFLICT (name)
+        ON CONFLICT (name)  -- Ensure conflict is handled by the 'name' column
         DO UPDATE SET content = EXCLUDED.content
     """, (name, json_data))
     conn.commit()
@@ -114,8 +114,10 @@ def form():
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
+    print(f"Form data: {data}")  # Debugging line
     action = data.get("action")
     draft_name = data.get("draft_name")
+    user_id = request.remote_addr
 
     if action == "save":
         if not draft_name:

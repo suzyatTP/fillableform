@@ -251,16 +251,6 @@ button:hover {
         </p>
       {% endfor %}
       
-      {% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
-      
     <button type="submit" name="action" value="save">Save Draft</button>
     <button type="submit" name="action" value="submit">Generate PDF</button>
     <button type="submit" name="action" value="delete">Delete Saved Draft</button>
