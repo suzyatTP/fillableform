@@ -11,7 +11,7 @@ app = Flask(__name__)
 def get_db_connection():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
 app.secret_key = 'your_secret_key_here'
-
+DB_FILE = 'drafts.db'
 
 def init_db():
     conn = get_db_connection()
@@ -68,8 +68,10 @@ def delete_draft(name):
     conn.close()
 
 # --- PDF utilities ---
-def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14, box_height=None):
-    p.setFont(font_name, font_size)
+def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14, top_padding=5, bottom_padding=5):
+    if font_name and font_size:
+        p.setFont(font_name, font_size)
+
     words = text.split()
     lines = []
     current_line = ""
@@ -83,13 +85,21 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size
     if current_line:
         lines.append(current_line)
 
+    # total height of the text block
     text_height = len(lines) * line_height
-    if box_height:
-        y -= (box_height - text_height) / 2 - 4
+    total_padding = top_padding + bottom_padding
+
+    # calculate vertical offset to center text inside the box
+    offset = (total_padding + text_height) / 2
+
+    # start drawing slightly lower to visually center
+    y = y - offset + line_height
 
     for line in lines:
         p.drawString(x, y, line)
         y -= line_height
+
+    return text_height + total_padding
 
 def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14, top_padding=5, bottom_padding=5):
     dummy = canvas.Canvas(io.BytesIO())
@@ -135,6 +145,7 @@ def submit():
             flash(f"Draft '{draft_name}' has been deleted.")
         return redirect(url_for('form'))
 
+    # --- PDF Generation ---
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
@@ -161,18 +172,20 @@ def submit():
         ("Primary Recommendation", data.get("Recommendation", ""))
     ]
     for label, val in top_fields:
-        box_height = get_text_height(val, width - 100)
+        box_height = get_text_height(val, width - 100, font_size=11, top_padding=5, bottom_padding=5)
         if y - box_height < 60:
             p.showPage()
             y = height - 50
         p.setFont("Helvetica-Bold", 12)
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 5, val, width - 110, box_height=box_height)
+        p.setFont("Helvetica", 11)
+        draw_wrapped_text(p, 55, y - 20, val, width - 110, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
         y -= (box_height + 15)
 
     p.showPage()
     y = height - 90
+
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Options Table")
     y -= 20
@@ -201,24 +214,25 @@ def submit():
             y = height - 50
         p.setFont("Helvetica-Bold", 10)
         p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 5, label, col_width - 10, font_name="Helvetica-Bold", font_size=11, box_height=row_h)
+        draw_wrapped_text(p, 55, y - 10, label, col_width - 10, font_name="Helvetica-Bold", font_size=11, top_padding=5, bottom_padding=5)
         for i in range(3):
             x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 11)
             p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
-            draw_wrapped_text(p, x + 5, y - 5, options[i], col_width - 10, box_height=row_h)
+            draw_wrapped_text(p, x + 5, y - 20, options[i], col_width - 10)
         y -= (row_h + 10)
         y -= 8
 
     decision = data.get("Decision", "")
-    box_height = get_text_height(decision, width - 100)
+    box_height = get_text_height(decision, width - 100, font_size=11, top_padding=5, bottom_padding=5)
     if y - box_height < 60:
         p.showPage()
         y = height - 50
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "Final Decision")
     p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
-    draw_wrapped_text(p, 55, y - 5, decision, width - 110, box_height=box_height)
+    p.setFont("Helvetica", 12)
+    draw_wrapped_text(p, 55, y - 20, decision, width - 110, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
     y -= (box_height + 15)
     y -= 20
 
@@ -227,24 +241,27 @@ def submit():
     y -= 10
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
-        box_height = get_text_height(action, width - 130)
+        box_height = get_text_height(action, width - 130, font_size=11, top_padding=5, bottom_padding=5)
         if y - box_height < 60:
             p.showPage()
             y = height - 50
         p.setFont("Helvetica-Bold", 10)
         p.drawString(55, y - 15, f"{i}.")
         p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
-        draw_wrapped_text(p, 80, y - 5, action, width - 130, box_height=box_height)
+        p.setFont("Helvetica", 11)
+        draw_wrapped_text(p, 80, y - 10, action, width - 130, font_name="Helvetica", font_size=11, top_padding=5, bottom_padding=5)
         y -= (box_height + 15)
 
     logo_path = os.path.join("static", "logo.png")
     if os.path.exists(logo_path):
-        p.drawImage(logo_path, 50, 20, width=80, height=30, mask='auto')
+        p.drawImage(logo_path, 50, 20, width=80, height=30, mask='auto')  # Adjust size/position as needed
+     
 
     p.save()
     buffer.seek(0)
     pdf_filename = f"{draft_name or 'Strategic_Topic_Summary'}.pdf"
     return send_file(buffer, as_attachment=True, download_name=pdf_filename, mimetype='application/pdf')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
