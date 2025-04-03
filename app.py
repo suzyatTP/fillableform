@@ -13,6 +13,11 @@ def get_db_connection():
 app.secret_key = 'your_secret_key_here'
 DB_FILE = 'drafts.db'
 
+@app.before_request
+def set_user():
+    if 'user_id' not in session:
+        session['user_id'] = 'user_123'  # Temporary user ID
+
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
