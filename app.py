@@ -74,6 +74,7 @@ def delete_draft(name):
 def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14):
     if font_name and font_size:
         p.setFont(font_name, font_size)
+
     words = text.split()
     lines = []
     current_line = ""
@@ -86,9 +87,11 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, 
             current_line = word
     if current_line:
         lines.append(current_line)
-    for line in lines:
-        p.drawString(x, y, line)
-        y -= line_height
+
+    y_start = y  # Store original y position
+    for i, line in enumerate(lines):
+        p.drawString(x, y_start - i * line_height, line)
+
     return len(lines) * line_height
 
 def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14):
@@ -170,7 +173,7 @@ def submit():
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
         p.setFont("Helvetica-Bold", 12)
-        draw_wrapped_text(p, 55, y - 20, val, width - 110)
+        draw_wrapped_text(p, 55, y - 15, decision, width - 110, "Helvetica", 12, line_height=14)
         y -= (box_height + 20)
 
     p.showPage()
@@ -204,7 +207,7 @@ def submit():
             y = height - 50
         p.setFont("Helvetica-Bold", 10)
         p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 20, label, col_width - 10, "Helvetica-Bold", 11)
+        draw_wrapped_text(p, 55, y - 15, decision, width - 110, "Helvetica", 12, line_height=14)
         for i in range(3):
             x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 10)
@@ -222,7 +225,7 @@ def submit():
     p.drawString(50, y, "Final Decision")
     p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
     p.setFont("Helvetica", 12)
-    draw_wrapped_text(p, 55, y - 20, decision, width - 110)
+    draw_wrapped_text(p, 55, y - 15, decision, width - 110, "Helvetica", 12, line_height=14)
     y -= (box_height + 20)
     y -= 20
 
@@ -238,8 +241,8 @@ def submit():
         p.setFont("Helvetica-Bold", 10)
         p.drawString(55, y - 15, f"{i}.")
         p.rect(75, y - box_height - 5, width - 120, box_height, stroke=1, fill=0)
-        p.setFont("Helvetica", 10)
-        draw_wrapped_text(p, 80, y - 20, action, width - 130)
+        draw_wrapped_text(p, 80, y - 15, action, width - 130, "Helvetica", 10, line_height=14)
+
         y -= (box_height + 15)
 
     logo_path = os.path.join("static", "logo.png")
