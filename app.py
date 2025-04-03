@@ -71,6 +71,7 @@ def delete_draft(name):
 def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14, top_padding=5, bottom_padding=5):
     if font_name and font_size:
         p.setFont(font_name, font_size)
+
     words = text.split()
     lines = []
     current_line = ""
@@ -83,15 +84,22 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, 
             current_line = word
     if current_line:
         lines.append(current_line)
-    
-    # Start drawing below top padding
-    y -= top_padding
+
+    # total height of the text block
+    text_height = len(lines) * line_height
+    total_padding = top_padding + bottom_padding
+
+    # calculate vertical offset to center text inside the box
+    offset = (total_padding + text_height) / 2
+
+    # start drawing slightly lower to visually center
+    y = y - offset + line_height
 
     for line in lines:
         p.drawString(x, y, line)
         y -= line_height
 
-    return len(lines) * line_height + top_padding + bottom_padding
+    return text_height + total_padding
 
 def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14, top_padding=5, bottom_padding=5):
     dummy = canvas.Canvas(io.BytesIO())
