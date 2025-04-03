@@ -135,19 +135,19 @@ def submit():
         return redirect(url_for('form'))
 
     # --- PDF Generation ---
-buffer = io.BytesIO()
-p = canvas.Canvas(buffer, pagesize=letter)  # p is now initialized!
+buffer = io.BytesIO()  # Create an in-memory buffer for the PDF
+p = canvas.Canvas(buffer, pagesize=letter)  # Initialize the canvas object
 
 # Now your function calls using p will work
 for label, options in rows:
     heights = [get_text_height(txt, col_width - 10) for txt in options]
     row_h = max(heights) + 20
     if y - row_h < 60:
-        p.showPage()  # Start a new page if the current one doesn't fit
+        p.showPage()  # Start a new page if the current one is full
         y = height - 50
     p.setFont("Helvetica-Bold", 10)
     p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
-    draw_wrapped_text(p, 55, y - 20, label.upper(), col_width - 10, "Helvetica-Bold", 11)
+    draw_wrapped_text(p, 55, y - 20, label.upper(), col_width - 10, "Helvetica-Bold", 11)  # Correct usage of p here
     for i in range(3):
         x = 50 + (i + 1) * col_width
         p.setFont("Helvetica", 10)
