@@ -68,16 +68,14 @@ def delete_draft(name):
     conn.close()
 
 # --- PDF utilities ---
-def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14, top_padding=5, bottom_padding=5):
-    if font_name and font_size:
-        p.setFont(font_name, font_size)
-
+def draw_wrapped_text(p, x, y_top, text, box_width, box_height, font_name="Helvetica", font_size=10, line_height=14):
+    p.setFont(font_name, font_size)
     words = text.split()
     lines = []
     current_line = ""
     for word in words:
         test_line = current_line + " " + word if current_line else word
-        if p.stringWidth(test_line, font_name, font_size) <= max_width:
+        if p.stringWidth(test_line, font_name, font_size) <= box_width:
             current_line = test_line
         else:
             lines.append(current_line)
@@ -85,23 +83,14 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, 
     if current_line:
         lines.append(current_line)
 
-    # total height of the text block
-    text_height = len(lines) * line_height
-    total_padding = top_padding + bottom_padding
-
-    # calculate vertical offset to center text inside the box
-    offset = (total_padding + text_height) / 2
-
-    # start drawing slightly lower to visually center
-    y = y - offset + line_height
+    total_text_height = len(lines) * line_height
+    start_y = y_top - ((box_height - total_text_height) / 2) - line_height + 5
 
     for line in lines:
-        p.drawString(x, y, line)
-        y -= line_height
+        p.drawString(x, start_y, line)
+        start_y -= line_height
 
-    return text_height + total_padding
-
-def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14, top_padding=5, bottom_padding=5):
+def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14):
     dummy = canvas.Canvas(io.BytesIO())
     dummy.setFont(font_name, font_size)
     words = text.split()
@@ -116,7 +105,7 @@ def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_h
             current_line = word
     if current_line:
         lines.append(current_line)
-    return (line_height * len(lines)) + top_padding + bottom_padding
+    return len(lines) * line_height
 
 # --- Routes ---
 @app.route('/', methods=['GET'])
