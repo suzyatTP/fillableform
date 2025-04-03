@@ -168,7 +168,7 @@ def submit():
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
         p.setFont("Helvetica", 10)
         draw_wrapped_text(p, 55, y - 20, val, width - 110)
-        y -= (box_height + 15)
+        y -= (box_height + 25)
 
     p.showPage()
     y = height - 90
