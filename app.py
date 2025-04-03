@@ -23,6 +23,9 @@ def init_db():
             content TEXT NOT NULL
         )
     """)
+
+    c.execute("ALTER TABLE drafts ADD COLUMN IF NOT EXISTS user_id TEXT;")
+
     conn.commit()
     conn.close()
 
