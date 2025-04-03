@@ -88,8 +88,6 @@ def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, 
         y -= line_height
     return len(lines) * line_height
 
-draw_wrapped_text(p, 55, y - 20, label, col_width - 10, "Helvetica-Bold", 11)
-
 def get_text_height(text, max_width, font_name="Helvetica", font_size=10, line_height=14):
     dummy = canvas.Canvas(io.BytesIO())
     dummy.setFont(font_name, font_size)
