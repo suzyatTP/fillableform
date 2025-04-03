@@ -249,7 +249,17 @@ button:hover {
           <label class="small-label">Key Action {{ i }}:</label><br>
           <textarea name="Action{{ i }}">{{ data.get('Action' ~ i, '') }}</textarea>
         </p>
-      {% endfor %}      
+      {% endfor %}
+      
+      {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
       
     <button type="submit" name="action" value="save">Save Draft</button>
     <button type="submit" name="action" value="submit">Generate PDF</button>
