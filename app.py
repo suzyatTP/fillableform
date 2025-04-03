@@ -36,7 +36,7 @@ def save_draft_to_db(name, content_dict):
     c.execute("""
         INSERT INTO drafts (name, content)
         VALUES (%s, %s)
-        ON CONFLICT (name)  -- Ensure conflict is handled by the 'name' column
+        ON CONFLICT (name)
         DO UPDATE SET content = EXCLUDED.content
     """, (name, json_data))
     conn.commit()
@@ -68,8 +68,9 @@ def delete_draft(name):
     conn.close()
 
 # --- PDF utilities ---
-def draw_wrapped_text(p, x, y, text, max_width, font_name="Helvetica", font_size=10, line_height=14):
-    p.setFont(font_name, font_size)
+def draw_wrapped_text(p, x, y, text, max_width, font_name=None, font_size=None, line_height=14):
+    if font_name and font_size:
+        p.setFont(font_name, font_size)
     words = text.split()
     lines = []
     current_line = ""
@@ -114,10 +115,8 @@ def form():
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.form.to_dict()
-    print(f"Form data: {data}")  # Debugging line
     action = data.get("action")
     draft_name = data.get("draft_name")
-    user_id = request.remote_addr
 
     if action == "save":
         if not draft_name:
@@ -153,7 +152,7 @@ def submit():
     top_fields = [
         ("Topic", data.get("Topic", "")),
         ("Point Person", data.get("PointPerson", "")),
-        ("Role of Executive Team", data.get("Role", "")),
+        ("Role of Executive Team (consult, inform, decide)", data.get("Role", "")),
         ("Executive Sponsor", data.get("Sponsor", "")),
         ("Problem Definition", data.get("Problem", "")),
         ("Outcome Description", data.get("Outcome", "")),
@@ -168,7 +167,7 @@ def submit():
         p.drawString(50, y, label)
         p.rect(50, y - box_height - 5, width - 100, box_height, stroke=1, fill=0)
         p.setFont("Helvetica-Bold", 12)
-        draw_wrapped_text(p, 55, y - 15, val, width - 110)
+        draw_wrapped_text(p, 55, y - 20, val, width - 110)
         y -= (box_height + 20)
 
     p.showPage()
@@ -186,7 +185,7 @@ def submit():
         ("Obstacles", [data.get("Option1Obstacles", ""), data.get("Option2Obstacles", ""), data.get("Option3Obstacles", "")])
     ]
     col_width = (width - 100) / 4
-    p.setFont("Helvetica-Bold", 10)
+    p.setFont("Helvetica-Bold", 11)
     p.rect(50, y - 20, col_width, 20, stroke=1, fill=0)
     for i, header in enumerate(["Option 1", "Option 2", "Option 3"]):
         x = 50 + col_width * (i + 1)
@@ -202,13 +201,14 @@ def submit():
             y = height - 50
         p.setFont("Helvetica-Bold", 10)
         p.rect(50, y - row_h, col_width, row_h, stroke=1, fill=0)
-        draw_wrapped_text(p, 55, y - 20, label, col_width - 10)
+        draw_wrapped_text(p, 55, y - 20, label, col_width - 10, "Helvetica-Bold", 11)
         for i in range(3):
             x = 50 + (i + 1) * col_width
             p.setFont("Helvetica", 10)
             p.rect(x, y - row_h, col_width, row_h, stroke=1, fill=0)
             draw_wrapped_text(p, x + 5, y - 20, options[i], col_width - 10)
         y -= (row_h + 10)
+        y -= 8
 
     decision = data.get("Decision", "")
     box_height = get_text_height(decision, width - 100)
@@ -221,10 +221,11 @@ def submit():
     p.setFont("Helvetica", 12)
     draw_wrapped_text(p, 55, y - 20, decision, width - 110)
     y -= (box_height + 20)
+    y -= 20
 
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "Key Actions:")
-    y -= 20
+    p.drawString(50, y, "Key Actions: (Who, What, When?)")
+    y -= 10
     for i in range(1, 6):
         action = data.get(f"Action{i}", "")
         box_height = get_text_height(action, width - 130)
